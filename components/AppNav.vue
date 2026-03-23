@@ -1,0 +1,67 @@
+<!-- components/AppNav.vue -->
+<template>
+  <nav class="nav">
+    <NuxtLink to="/" class="nav-btn" active-class="active" exact>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="9" y2="18"/>
+      </svg>
+      <span>Log</span>
+    </NuxtLink>
+    <NuxtLink to="/progress" class="nav-btn" active-class="active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      <span>Progress</span>
+    </NuxtLink>
+    <NuxtLink to="/history" class="nav-btn" active-class="active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
+      <span>Riwayat</span>
+    </NuxtLink>
+    <NuxtLink to="/profile" class="nav-btn" active-class="active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+      <span>Profil</span>
+    </NuxtLink>
+  </nav>
+</template>
+
+<style scoped>
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding-bottom: var(--safe-bottom);
+  z-index: 100;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 0;
+  font-size: 10px;
+  color: var(--text3);
+  text-decoration: none;
+  transition: color 0.2s;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.nav-btn svg {
+  width: 22px;
+  height: 22px;
+}
+.nav-btn.active {
+  color: var(--accent);
+}
+</style>
