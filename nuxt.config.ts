@@ -22,13 +22,13 @@ export default defineNuxtConfig({
       short_name: 'GymTrack',
       description: 'Track workout, analisis hypertrophy, pantau progress',
       theme_color: '#0f1117',
-      background_color: '#0f1117',
+      background_color: '#e2e2e2',
       display: 'standalone',
       orientation: 'portrait',
       icons: [
         { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
         { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
-        { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+        { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
       ],
     },
     workbox: {
