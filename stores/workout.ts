@@ -52,7 +52,8 @@ function loadLS<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback
   try {
     const raw = localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : fallback
+    if (!raw) return fallback
+    return JSON.parse(JSON.stringify(JSON.parse(raw))) as T
   } catch {
     return fallback
   }
