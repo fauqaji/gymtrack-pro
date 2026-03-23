@@ -69,7 +69,7 @@ export const EXERCISES_DB = [
 ]
 
 export const WORKOUT_TYPES = [
-  { id: 'chest', name: 'Chest Day', emoji: '💪', desc: 'Dada & Trisep', suggestions: ['bench_flat', 'bench_incline', 'cable_fly', 'dumbbell_fly', 'tricep_pushdown', 'skull_crusher'] },
+  { id: 'chest', name: 'Chest Day', emoji: '🦍', desc: 'Dada & Trisep', suggestions: ['bench_flat', 'bench_incline', 'cable_fly', 'dumbbell_fly', 'tricep_pushdown', 'skull_crusher'] },
   { id: 'back', name: 'Back Day', emoji: '🔙', desc: 'Punggung & Bisep', suggestions: ['deadlift', 'pullup', 'barbell_row', 'lat_pulldown', 'cable_row', 'face_pull', 'barbell_curl'] },
   { id: 'shoulders', name: 'Shoulder Day', emoji: '🏋️', desc: 'Bahu & Trapezius', suggestions: ['ohp', 'db_ohp', 'lateral_raise', 'rear_delt_fly', 'face_pull', 'shrug'] },
   { id: 'legs', name: 'Leg Day', emoji: '🦵', desc: 'Quads, Hamstring, Glutes', suggestions: ['squat', 'rdl', 'leg_press', 'leg_curl', 'leg_extension', 'calf_raise', 'hip_thrust'] },
