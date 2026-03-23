@@ -79,8 +79,8 @@ function barColor(score: number): string {
 
 function buildChart() {
   if (!chartCanvas.value) return
-  import('chart.js').then(({ Chart, BarElement, CategoryScale, LinearScale, Tooltip, defaults }) => {
-    Chart.register(BarElement, CategoryScale, LinearScale, Tooltip)
+  import('chart.js').then(({ Chart, BarController, BarElement, CategoryScale, LinearScale, Tooltip, defaults }) => {
+    Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip)
     defaults.font.family = "'DM Sans', sans-serif"
 
     if (chartInstance) chartInstance.destroy()

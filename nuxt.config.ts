@@ -21,8 +21,8 @@ export default defineNuxtConfig({
       name: 'GymTrack Pro',
       short_name: 'GymTrack',
       description: 'Track workout, analisis hypertrophy, pantau progress',
-      theme_color: '#e2e2e2',
-      background_color: '#e2e2e2',
+      theme_color: '#0f1117',
+      background_color: '#0f1117',
       display: 'standalone',
       orientation: 'portrait',
       icons: [
