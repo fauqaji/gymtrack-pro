@@ -92,7 +92,7 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: "apple-touch-icon", href: "/icon-192.png" },
-        { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+        // { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
         { rel: "preconnect", href: "https://fonts.googleapis.com" },
         {
           rel: "stylesheet",
