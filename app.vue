@@ -3,15 +3,15 @@
   <div>
     <!-- Onboarding -->
     <OnboardScreen v-if="!store.isOnboarded" />
-
     <!-- Main App -->
     <div v-else class="app-shell">
       <NuxtPage />
-      <AppNav />
+      <AppNav @openCamera="showCamera = true" />
     </div>
-
     <!-- Global Toast -->
     <ToastMessage />
+    <!-- Camera Modal -->
+    <CameraModal v-if="showCamera" @close="showCamera = false" />
   </div>
 </template>
 
@@ -19,6 +19,7 @@
 import { useWorkoutStore } from '~/stores/workout'
 
 const store = useWorkoutStore()
+const showCamera = ref(false)
 
 onMounted(() => {
   store.init()

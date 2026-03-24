@@ -1,11 +1,9 @@
-<!-- components/AddExerciseModal.vue -->
 <template>
   <div class="overlay" @click.self="$emit('close')">
     <div class="sheet">
       <div class="handle"></div>
-      <h3>Pilih Latihan</h3>
+      <h3>{{ isCreatingDaily ? "Pilih Gerakan Paket" : "Pilih Latihan" }}</h3>
 
-      <!-- Category filter -->
       <div class="cat-row">
         <button
           v-for="c in categories"
@@ -18,28 +16,139 @@
         </button>
       </div>
 
-      <input
-        v-model="search"
-        class="search-inp"
-        placeholder="Cari latihan..."
-        type="text"
-      />
+      <div
+        v-if="activeCategory === 'daily' && !isCreatingDaily"
+        class="tab-container"
+      >
+        <button class="btn-create-daily" @click="toggleCreateDaily">
+          + Buat Paket Daily
+        </button>
 
-      <div class="ex-list">
-        <div
-          v-for="ex in filtered"
-          :key="ex.id"
-          class="ex-row"
-          @click="add(ex.id)"
-        >
-          <div>
-            <div class="er-name">{{ ex.name }}</div>
-            <div class="er-muscle">{{ ex.muscle }}</div>
+        <div class="ex-list">
+          <div
+            v-for="tpl in store.customTemplates"
+            :key="tpl.id"
+            class="ex-row"
+          >
+            <div style="flex: 1">
+              <div class="er-name">{{ tpl.name }}</div>
+              <div class="er-muscle">{{ tpl.suggestions.length }} Gerakan</div>
+            </div>
+            <div class="daily-actions">
+              <button
+                class="btn-delete-daily"
+                @click="store.deleteCustomTemplate(tpl.id)"
+              >
+                🗑
+              </button>
+              <button class="btn-start-daily" @click="loadDailyToSession(tpl)">
+                Mulai Latihan
+              </button>
+            </div>
           </div>
-          <span class="er-add">+</span>
+          <div v-if="store.customTemplates.length === 0" class="no-results">
+            Belum ada paket harian. Klik tanda + di atas.
+          </div>
         </div>
-        <div v-if="filtered.length === 0" class="no-results">
-          Tidak ditemukan. Coba kata kunci lain.
+      </div>
+
+      <div
+        v-else-if="activeCategory === 'daily' && isCreatingDaily"
+        class="tab-container"
+      >
+        <input
+          v-model="dailyName"
+          class="search-inp"
+          placeholder="Hari & Jenis (cth: Senin - Dada & Trisep)"
+          type="text"
+        />
+
+        <div class="selected-header">
+          <span>Gerakan Terpilih ({{ dailyExercises.length }})</span>
+          <span class="hint-text">Klik kategori di atas untuk menambah</span>
+        </div>
+
+        <div class="ex-list">
+          <div v-for="(id, idx) in dailyExercises" :key="idx" class="ex-row">
+            <div>
+              <div class="er-name">{{ getExName(id) }}</div>
+            </div>
+            <button
+              class="btn-remove-daily"
+              @click="dailyExercises.splice(idx, 1)"
+            >
+              ✕
+            </button>
+          </div>
+          <div v-if="dailyExercises.length === 0" class="no-results" style="margin-top: 160px">
+            Pilih kategori (cth: Chest) untuk mulai memasukkan gerakan ke paket
+            ini.
+            <button class="btn-browse" @click="goToAll">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              Lihat Semua Latihan
+            </button>
+          </div>
+        </div>
+
+        <div class="create-actions">
+          <button class="btn-cancel" @click="cancelCreateDaily">Batal</button>
+          <button
+            class="btn-save"
+            :disabled="!dailyName || dailyExercises.length === 0"
+            @click="saveDaily"
+          >
+            Simpan Paket
+          </button>
+        </div>
+      </div>
+
+      <div v-else class="tab-container">
+        <div v-if="isCreatingDaily" class="create-banner">
+          <span
+            >Menambah ke paket: <b>{{ dailyName || "Baru" }}</b></span
+          >
+          <button class="btn-back-daily" @click="activeCategory = 'daily'">
+            Selesai Milih
+          </button>
+        </div>
+
+        <input
+          v-model="search"
+          class="search-inp"
+          placeholder="Cari latihan..."
+          type="text"
+        />
+
+        <div class="ex-list">
+          <div
+            v-for="ex in filtered"
+            :key="ex.id"
+            class="ex-row"
+            @click="add(ex.id)"
+          >
+            <div>
+              <div class="er-name">{{ ex.name }}</div>
+              <div class="er-muscle">{{ ex.muscle }}</div>
+            </div>
+            <span
+              class="er-add"
+              v-if="!isCreatingDaily || !dailyExercises.includes(ex.id)"
+              >+</span
+            >
+            <span class="er-added" v-else>✓</span>
+          </div>
+          <div v-if="filtered.length === 0" class="no-results">
+            Tidak ditemukan. Coba kata kunci lain.
+          </div>
         </div>
       </div>
     </div>
@@ -47,6 +156,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from "vue";
 import { useWorkoutStore } from "~/stores/workout";
 import { EXERCISES_DB } from "~/composables/useData";
 
@@ -57,6 +167,11 @@ const { toast } = useToast();
 const search = ref("");
 const activeCategory = ref("all");
 
+// State untuk mode pembuatan Paket Daily
+const isCreatingDaily = ref(false);
+const dailyName = ref("");
+const dailyExercises = ref<string[]>([]);
+
 const categories = [
   { id: "all", label: "Semua" },
   { id: "chest", label: "🦍 Chest" },
@@ -65,12 +180,22 @@ const categories = [
   { id: "legs", label: "🦵 Legs" },
   { id: "arms", label: "💪 Arms" },
   { id: "core", label: "🎯 Core" },
+  { id: "daily", label: "📅 Daily" }, // Kategori Baru ditambahkan di sini
 ];
 
 const filtered = computed(() => {
   let list = EXERCISES_DB;
-  if (activeCategory.value !== "all")
-    list = list.filter((e) => e.category === activeCategory.value);
+
+  // Filter berdasarkan kategori (menggunakan logika array/string dari kode terbaru Anda)
+  if (activeCategory.value !== "all" && activeCategory.value !== "daily") {
+    list = list.filter((e) =>
+      Array.isArray(e.category)
+        ? e.category.includes(activeCategory.value)
+        : e.category === activeCategory.value,
+    );
+  }
+
+  // Filter berdasarkan pencarian
   if (search.value.trim()) {
     const q = search.value.toLowerCase();
     list = list.filter(
@@ -81,13 +206,67 @@ const filtered = computed(() => {
   return list;
 });
 
+// Fungsi untuk langsung ke tab Semua saat klik tombol browse di paket daily
+function goToAll() {
+  activeCategory.value = 'all'
+  nextTick(() => {
+    const catRow = document.querySelector('.cat-row')
+    catRow?.scrollTo({ left: 0, behavior: 'smooth' })
+  })
+}
+
+// Helper mendapatkan nama latihan
+function getExName(id: string) {
+  return EXERCISES_DB.find((e) => e.id === id)?.name || id;
+}
+
+// Fungsi kontrol form Daily
+function toggleCreateDaily() {
+  isCreatingDaily.value = true;
+  dailyName.value = "";
+  dailyExercises.value = [];
+}
+
+function cancelCreateDaily() {
+  isCreatingDaily.value = false;
+  activeCategory.value = "daily";
+}
+
+function saveDaily() {
+  if (!dailyName.value || dailyExercises.value.length === 0) return;
+  store.saveCustomTemplate(dailyName.value, dailyExercises.value);
+  toast(`Paket ${dailyName.value} tersimpan!`, "success");
+  isCreatingDaily.value = false;
+}
+
+function loadDailyToSession(template: any) {
+  store.setSelectedType(template.name);
+  // Masukkan semua gerakan ke sesi yang aktif
+  template.suggestions.forEach((id: string) => {
+    store.addExercise(id);
+  });
+  toast(`Paket ${template.name} berhasil dimuat!`, "success");
+  emit("close"); // Tutup modal otomatis setelah klik Mulai Latihan
+}
+
 function add(id: string) {
-  const ok = store.addExercise(id);
-  if (!ok) toast("Latihan sudah ada di list!", "accent");
-  else {
-    const ex = EXERCISES_DB.find((e) => e.id === id)!;
-    toast(`${ex.name} ditambahkan!`, "success");
-    emit("close");
+  if (isCreatingDaily.value) {
+    // Mode 1: Jika sedang buat paket, masukkan ID ke dalam array paket sementara
+    if (!dailyExercises.value.includes(id)) {
+      dailyExercises.value.push(id);
+      toast("Latihan masuk ke paket", "success");
+    } else {
+      toast("Sudah ada di dalam paket!", "accent");
+    }
+  } else {
+    // Mode 2: Jika normal, langsung tambahkan ke list latihan hari ini
+    const ok = store.addExercise(id);
+    if (!ok) toast("Latihan sudah ada di list!", "accent");
+    else {
+      const ex = EXERCISES_DB.find((e) => e.id === id)!;
+      toast(`${ex.name} ditambahkan!`, "success");
+      emit("close");
+    }
   }
 }
 </script>
@@ -124,6 +303,12 @@ h3 {
   font-size: 18px;
   font-weight: 800;
   margin-bottom: 14px;
+}
+.tab-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
 }
 
 .cat-row {
@@ -206,6 +391,11 @@ h3 {
   color: var(--text3);
   transition: color 0.15s;
 }
+.er-added {
+  font-size: 16px;
+  color: var(--green);
+  font-weight: bold;
+}
 .ex-row:hover .er-add {
   color: var(--accent);
 }
@@ -214,5 +404,149 @@ h3 {
   padding: 24px;
   color: var(--text2);
   font-size: 14px;
+}
+
+/* Styling Khusus Paket Daily */
+.btn-create-daily {
+  width: 100%;
+  padding: 12px;
+  border: 2px dashed var(--border);
+  background: transparent;
+  color: var(--accent);
+  border-radius: 12px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.btn-start-daily {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 13px;
+}
+.btn-remove-daily {
+  background: transparent;
+  border: none;
+  color: var(--red);
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* Banner Saat Memilih Latihan Untuk Paket */
+.create-banner {
+  background: var(--bg3);
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  border: 1px solid var(--accent);
+  color: var(--text);
+}
+.btn-back-daily {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 11px;
+  cursor: pointer;
+}
+.selected-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0;
+  font-size: 13px;
+  font-weight: bold;
+}
+.hint-text {
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: normal;
+}
+
+/* Tombol Simpan/Batal Paket */
+.create-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  padding-bottom: 20px;
+}
+.btn-cancel {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--bg3);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-weight: bold;
+  cursor: pointer;
+}
+.btn-save {
+  flex: 2;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+.btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.daily-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-delete-daily {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--red);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-delete-daily:hover {
+  background: rgba(255, 80, 80, 0.1);
+  border-color: var(--red);
+}
+
+/* Tombol Browse Saat Paket Daily Kosong */
+.btn-browse {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 32px auto 0;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  padding: 8px 16px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: "DM Sans", sans-serif;
+}
+.btn-browse:hover {
+  border-color: var(--accent);
+  background: rgba(200, 241, 53, 0.07);
 }
 </style>

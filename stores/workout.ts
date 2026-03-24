@@ -1,79 +1,87 @@
 // stores/workout.ts
-import { defineStore } from 'pinia'
-import { calcHypertrophyScore, EXERCISES_DB } from '~/composables/useData'
+import { defineStore } from "pinia";
+import { calcHypertrophyScore, EXERCISES_DB } from "~/composables/useData";
 
 export interface WorkoutSet {
-  reps: number
-  weight: number
+  reps: number;
+  weight: number;
 }
 
 export interface WorkoutExercise {
-  id: string
-  name: string
-  muscle: string
-  category: string
-  sets: WorkoutSet[]
+  id: string;
+  name: string;
+  muscle: string;
+  category: string;
+  sets: WorkoutSet[];
 }
 
 export interface WorkoutSession {
-  id: number
-  date: string
-  day: string
-  typeId: string
-  typeName: string
-  exercises: WorkoutExercise[]
-  totalVolume: number
-  totalSets: number
-  totalReps: number
-  hypScore: number
-  aiAnalysis: string
-  durationMinutes?: number
+  id: number;
+  date: string;
+  day: string;
+  typeId: string;
+  typeName: string;
+  exercises: WorkoutExercise[];
+  totalVolume: number;
+  totalSets: number;
+  totalReps: number;
+  hypScore: number;
+  aiAnalysis: string;
+  durationMinutes?: number;
 }
 
 export interface PersonalRecord {
-  exId: string
-  name: string
-  muscle: string
-  volume: number
-  maxWeight: number
-  bestSet: { reps: number; weight: number }
-  date: string
+  exId: string;
+  name: string;
+  muscle: string;
+  volume: number;
+  maxWeight: number;
+  bestSet: { reps: number; weight: number };
+  date: string;
 }
 
 export interface UserProfile {
-  name: string
-  weight: number
-  goal: 'hypertrophy' | 'strength' | 'endurance' | 'fat_loss'
-  level: 'beginner' | 'intermediate' | 'advanced'
-  joinDate: string
+  name: string;
+  weight: number;
+  goal: "hypertrophy" | "strength" | "endurance" | "fat_loss";
+  level: "beginner" | "intermediate" | "advanced";
+  joinDate: string;
+}
+
+export interface CustomTemplate {
+  id: string;
+  name: string;
+  suggestions: string[];
+  createdAt: string;
 }
 
 function loadLS<T>(key: string, fallback: T): T {
-  if (typeof window === 'undefined') return fallback
+  if (typeof window === "undefined") return fallback;
   try {
-    const raw = localStorage.getItem(key)
-    if (!raw) return fallback
-    return JSON.parse(JSON.stringify(JSON.parse(raw))) as T
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(JSON.stringify(JSON.parse(raw))) as T;
   } catch {
-    return fallback
+    return fallback;
   }
 }
 
 function saveLS(key: string, val: any) {
-  if (typeof window === 'undefined') return
-  localStorage.setItem(key, JSON.stringify(val))
+  if (typeof window === "undefined") return;
+  localStorage.setItem(key, JSON.stringify(val));
 }
 
-export const useWorkoutStore = defineStore('workout', {
+export const useWorkoutStore = defineStore("workout", {
   state: () => ({
     profile: null as UserProfile | null,
     history: [] as WorkoutSession[],
     personalRecords: {} as Record<string, PersonalRecord>,
     currentExercises: [] as WorkoutExercise[],
-    selectedDay: 1 as number,  // 1=Senin ... 7=Minggu
-    selectedTypeId: '' as string,
-    lastAiAnalysis: '' as string,
+    selectedDay: 1 as number, // 1=Senin ... 7=Minggu
+    selectedTypeId: "" as string,
+    lastAiAnalysis: "" as string,
     sessionStartTime: null as number | null,
+    customTemplates: [] as CustomTemplate[],
   }),
 
   getters: {
@@ -84,161 +92,230 @@ export const useWorkoutStore = defineStore('workout', {
     totalVolumeKg: (s) => s.history.reduce((a, h) => a + h.totalVolume, 0),
 
     streakDays(): number {
-      if (this.history.length === 0) return 0
-      const dates = [...new Set(this.history.map(h => h.date.split('T')[0]))].sort().reverse()
-      let streak = 0
-      const today = new Date().toISOString().split('T')[0]
-      let d = new Date(today)
+      if (this.history.length === 0) return 0;
+      const dates = [...new Set(this.history.map((h) => h.date.split("T")[0]))]
+        .sort()
+        .reverse();
+      let streak = 0;
+      const today = new Date().toISOString().split("T")[0];
+      let d = new Date(today);
       for (const date of dates) {
-        const check = d.toISOString().split('T')[0]
+        const check = d.toISOString().split("T")[0];
         if (date === check) {
-          streak++
-          d.setDate(d.getDate() - 1)
-        } else if (date < check) break
+          streak++;
+          d.setDate(d.getDate() - 1);
+        } else if (date < check) break;
       }
-      return streak
+      return streak;
     },
 
     sessionsThisWeek(): number {
-      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-      return this.history.filter(h => new Date(h.date) > weekAgo).length
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      return this.history.filter((h) => new Date(h.date) > weekAgo).length;
     },
 
     currentTotalVolume(): number {
-      return this.currentExercises.reduce((a, ex) =>
-        a + ex.sets.reduce((b, s) => b + (s.reps || 0) * (s.weight || 0), 0), 0)
+      return this.currentExercises.reduce(
+        (a, ex) =>
+          a + ex.sets.reduce((b, s) => b + (s.reps || 0) * (s.weight || 0), 0),
+        0,
+      );
     },
 
     prList(): PersonalRecord[] {
-      return Object.values(this.personalRecords).sort((a, b) => b.volume - a.volume)
+      return Object.values(this.personalRecords).sort(
+        (a, b) => b.volume - a.volume,
+      );
     },
 
     weeklyVolumeData(): { label: string; volume: number }[] {
-      const result = []
-      const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+      const result = [];
+      const days = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
       for (let i = 6; i >= 0; i--) {
-        const d = new Date()
-        d.setDate(d.getDate() - i)
-        const ds = d.toISOString().split('T')[0]
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const ds = d.toISOString().split("T")[0];
         const vol = this.history
-          .filter(h => h.date.startsWith(ds))
-          .reduce((a, h) => a + h.totalVolume, 0)
-        result.push({ label: days[d.getDay()], volume: Math.round(vol) })
+          .filter((h) => h.date.startsWith(ds))
+          .reduce((a, h) => a + h.totalVolume, 0);
+        result.push({ label: days[d.getDay()], volume: Math.round(vol) });
       }
-      return result
+      return result;
     },
 
     muscleHypScores(): { muscle: string; score: number }[] {
-      const data: Record<string, { total: number; inZone: number }> = {}
-      this.history.slice(0, 15).forEach(h => {
-        h.exercises.forEach(ex => {
-          if (!data[ex.muscle]) data[ex.muscle] = { total: 0, inZone: 0 }
-          ex.sets.forEach(s => {
-            data[ex.muscle].total++
-            if (s.reps >= 6 && s.reps <= 12) data[ex.muscle].inZone++
-          })
-        })
-      })
+      const data: Record<string, { total: number; inZone: number }> = {};
+      this.history.slice(0, 15).forEach((h) => {
+        h.exercises.forEach((ex) => {
+          if (!data[ex.muscle]) data[ex.muscle] = { total: 0, inZone: 0 };
+          ex.sets.forEach((s) => {
+            data[ex.muscle].total++;
+            if (s.reps >= 6 && s.reps <= 12) data[ex.muscle].inZone++;
+          });
+        });
+      });
       return Object.entries(data)
-        .map(([muscle, d]) => ({ muscle, score: Math.round((d.inZone / d.total) * 100) }))
+        .map(([muscle, d]) => ({
+          muscle,
+          score: Math.round((d.inZone / d.total) * 100),
+        }))
         .sort((a, b) => b.score - a.score)
-        .slice(0, 8)
+        .slice(0, 8);
     },
   },
 
   actions: {
     init() {
-      this.profile = loadLS<UserProfile | null>('gym_profile', null)
-      this.history = loadLS<WorkoutSession[]>('gym_history', [])
-      this.personalRecords = loadLS<Record<string, PersonalRecord>>('gym_prs', {})
-      this.currentExercises = loadLS<WorkoutExercise[]>('gym_current', [])
-      this.lastAiAnalysis = loadLS<string>('gym_last_ai', '')
+      this.profile = loadLS<UserProfile | null>("gym_profile", null);
+      this.history = loadLS<WorkoutSession[]>("gym_history", []);
+      this.personalRecords = loadLS<Record<string, PersonalRecord>>(
+        "gym_prs",
+        {},
+      );
+      this.currentExercises = loadLS<WorkoutExercise[]>("gym_current", []);
+      this.lastAiAnalysis = loadLS<string>("gym_last_ai", "");
+      this.customTemplates = loadLS<CustomTemplate[]>(
+        "gym_custom_templates",
+        [],
+      );
       // Set today's day
-      const day = new Date().getDay()
-      this.selectedDay = day === 0 ? 7 : day
+      const day = new Date().getDay();
+      this.selectedDay = day === 0 ? 7 : day;
+    },
+
+    saveCustomTemplate(name: string, suggestions: string[]) {
+      const newTemplate: CustomTemplate = {
+        id: "custom_" + Date.now(),
+        name,
+        suggestions,
+        createdAt: new Date().toISOString(),
+      };
+      this.customTemplates.push(newTemplate);
+      saveLS("gym_custom_templates", this.customTemplates);
+    },
+
+    deleteCustomTemplate(id: string) {
+      this.customTemplates = this.customTemplates.filter((t) => t.id !== id);
+      saveLS("gym_custom_templates", this.customTemplates);
     },
 
     saveProfile(p: UserProfile) {
-      this.profile = p
-      saveLS('gym_profile', p)
+      this.profile = p;
+      saveLS("gym_profile", p);
     },
 
     setSelectedDay(d: number) {
-      this.selectedDay = d
+      this.selectedDay = d;
     },
 
     setSelectedType(id: string) {
-      this.selectedTypeId = id
+      this.selectedTypeId = id;
     },
 
     autoLoadExercises(suggestions: string[]) {
-      if (this.currentExercises.length > 0) return
-      this.currentExercises = suggestions.map(id => {
-        const ex = EXERCISES_DB.find(e => e.id === id)
-        if (!ex) return null
-        return {
-          id: ex.id, name: ex.name, muscle: ex.muscle, category: ex.category,
-          sets: [{ reps: 10, weight: 20 }, { reps: 10, weight: 20 }, { reps: 8, weight: 22.5 }],
-        }
-      }).filter(Boolean) as WorkoutExercise[]
-      this.saveCurrentExercises()
+      if (this.currentExercises.length > 0) return;
+      this.currentExercises = suggestions
+        .map((id) => {
+          const ex = EXERCISES_DB.find((e) => e.id === id);
+          if (!ex) return null;
+          return {
+            id: ex.id,
+            name: ex.name,
+            muscle: ex.muscle,
+            category: ex.category,
+            sets: [
+              { reps: 10, weight: 20 },
+              { reps: 10, weight: 20 },
+              { reps: 8, weight: 22.5 },
+            ],
+          };
+        })
+        .filter(Boolean) as WorkoutExercise[];
+      this.saveCurrentExercises();
     },
 
     addExercise(exId: string) {
-      const ex = EXERCISES_DB.find(e => e.id === exId)
-      if (!ex || this.currentExercises.find(e => e.id === exId)) return false
+      const ex = EXERCISES_DB.find((e) => e.id === exId);
+      if (!ex || this.currentExercises.find((e) => e.id === exId)) return false;
       this.currentExercises.push({
-        id: ex.id, name: ex.name, muscle: ex.muscle, category: ex.category,
-        sets: [{ reps: 10, weight: 20 }, { reps: 10, weight: 20 }, { reps: 8, weight: 22.5 }],
-      })
-      this.saveCurrentExercises()
-      return true
+        id: ex.id,
+        name: ex.name,
+        muscle: ex.muscle,
+        category: ex.category,
+        sets: [
+          { reps: 10, weight: 20 },
+          { reps: 10, weight: 20 },
+          { reps: 8, weight: 22.5 },
+        ],
+      });
+      this.saveCurrentExercises();
+      return true;
     },
 
     removeExercise(idx: number) {
-      this.currentExercises.splice(idx, 1)
-      this.saveCurrentExercises()
+      this.currentExercises.splice(idx, 1);
+      this.saveCurrentExercises();
     },
 
-    updateSet(exIdx: number, setIdx: number, field: 'reps' | 'weight', val: number) {
-      this.currentExercises[exIdx].sets[setIdx][field] = val
-      this.saveCurrentExercises()
+    updateSet(
+      exIdx: number,
+      setIdx: number,
+      field: "reps" | "weight",
+      val: number,
+    ) {
+      this.currentExercises[exIdx].sets[setIdx][field] = val;
+      this.saveCurrentExercises();
     },
 
     addSet(exIdx: number) {
-      const last = this.currentExercises[exIdx].sets.slice(-1)[0] ?? { reps: 10, weight: 20 }
-      this.currentExercises[exIdx].sets.push({ ...last })
-      this.saveCurrentExercises()
+      const last = this.currentExercises[exIdx].sets.slice(-1)[0] ?? {
+        reps: 10,
+        weight: 20,
+      };
+      this.currentExercises[exIdx].sets.push({ ...last });
+      this.saveCurrentExercises();
     },
 
     removeSet(exIdx: number, setIdx: number) {
-      if (this.currentExercises[exIdx].sets.length <= 1) return
-      this.currentExercises[exIdx].sets.splice(setIdx, 1)
-      this.saveCurrentExercises()
+      if (this.currentExercises[exIdx].sets.length <= 1) return;
+      this.currentExercises[exIdx].sets.splice(setIdx, 1);
+      this.saveCurrentExercises();
     },
 
     clearExercises() {
-      this.currentExercises = []
-      this.saveCurrentExercises()
+      this.currentExercises = [];
+      this.saveCurrentExercises();
     },
 
     saveCurrentExercises() {
-      saveLS('gym_current', this.currentExercises)
+      saveLS("gym_current", this.currentExercises);
     },
 
     startSession() {
-      this.sessionStartTime = Date.now()
+      this.sessionStartTime = Date.now();
     },
 
-    finishWorkout(dayName: string, typeName: string, aiText: string): WorkoutSession {
-      const exercises = JSON.parse(JSON.stringify(this.currentExercises)) as WorkoutExercise[]
-      const totalVolume = exercises.reduce((a, ex) => a + ex.sets.reduce((b, s) => b + s.reps * s.weight, 0), 0)
-      const totalSets = exercises.reduce((a, ex) => a + ex.sets.length, 0)
-      const totalReps = exercises.reduce((a, ex) => a + ex.sets.reduce((b, s) => b + s.reps, 0), 0)
-      const hypScore = calcHypertrophyScore(exercises)
+    finishWorkout(
+      dayName: string,
+      typeName: string,
+      aiText: string,
+    ): WorkoutSession {
+      const exercises = JSON.parse(
+        JSON.stringify(this.currentExercises),
+      ) as WorkoutExercise[];
+      const totalVolume = exercises.reduce(
+        (a, ex) => a + ex.sets.reduce((b, s) => b + s.reps * s.weight, 0),
+        0,
+      );
+      const totalSets = exercises.reduce((a, ex) => a + ex.sets.length, 0);
+      const totalReps = exercises.reduce(
+        (a, ex) => a + ex.sets.reduce((b, s) => b + s.reps, 0),
+        0,
+      );
+      const hypScore = calcHypertrophyScore(exercises);
       const duration = this.sessionStartTime
         ? Math.round((Date.now() - this.sessionStartTime) / 60000)
-        : undefined
+        : undefined;
 
       const session: WorkoutSession = {
         id: Date.now(),
@@ -253,76 +330,98 @@ export const useWorkoutStore = defineStore('workout', {
         hypScore,
         aiAnalysis: aiText,
         durationMinutes: duration,
-      }
+      };
 
-      this.history.unshift(session)
-      saveLS('gym_history', this.history)
-      this.updatePRs(session)
+      this.history.unshift(session);
+      saveLS("gym_history", this.history);
+      this.updatePRs(session);
 
-      this.lastAiAnalysis = aiText
-      saveLS('gym_last_ai', aiText)
+      this.lastAiAnalysis = aiText;
+      saveLS("gym_last_ai", aiText);
 
       // Reset current
-      this.currentExercises = []
-      this.saveCurrentExercises()
-      this.selectedTypeId = ''
-      this.sessionStartTime = null
+      this.currentExercises = [];
+      this.saveCurrentExercises();
+      this.selectedTypeId = "";
+      this.sessionStartTime = null;
 
-      return session
+      return session;
     },
 
     updatePRs(session: WorkoutSession) {
       for (const ex of session.exercises) {
-        const vol = ex.sets.reduce((a, s) => a + s.reps * s.weight, 0)
-        const maxWeight = Math.max(...ex.sets.map(s => s.weight))
-        const bestSet = ex.sets.reduce((best, s) => s.weight > best.weight ? s : best, ex.sets[0])
-        const existing = this.personalRecords[ex.id]
+        const vol = ex.sets.reduce((a, s) => a + s.reps * s.weight, 0);
+        const maxWeight = Math.max(...ex.sets.map((s) => s.weight));
+        const bestSet = ex.sets.reduce(
+          (best, s) => (s.weight > best.weight ? s : best),
+          ex.sets[0],
+        );
+        const existing = this.personalRecords[ex.id];
         if (!existing || vol > existing.volume) {
           this.personalRecords[ex.id] = {
-            exId: ex.id, name: ex.name, muscle: ex.muscle,
-            volume: vol, maxWeight, bestSet: { ...bestSet },
+            exId: ex.id,
+            name: ex.name,
+            muscle: ex.muscle,
+            volume: vol,
+            maxWeight,
+            bestSet: { ...bestSet },
             date: session.date,
-          }
+          };
         }
       }
-      saveLS('gym_prs', this.personalRecords)
+      saveLS("gym_prs", this.personalRecords);
     },
 
     getPR(exId: string): PersonalRecord | null {
-      return this.personalRecords[exId] ?? null
+      return this.personalRecords[exId] ?? null;
     },
 
     deleteSession(id: number) {
-      this.history = this.history.filter(h => h.id !== id)
-      saveLS('gym_history', this.history)
+      this.history = this.history.filter((h) => h.id !== id);
+      saveLS("gym_history", this.history);
     },
 
     exportData(): string {
-      return JSON.stringify({
-        profile: this.profile,
-        history: this.history,
-        personalRecords: this.personalRecords,
-        exportedAt: new Date().toISOString(),
-      }, null, 2)
+      return JSON.stringify(
+        {
+          profile: this.profile,
+          history: this.history,
+          personalRecords: this.personalRecords,
+          exportedAt: new Date().toISOString(),
+        },
+        null,
+        2,
+      );
     },
 
     importData(raw: string): boolean {
       try {
-        const data = JSON.parse(raw)
-        if (data.profile) { this.profile = data.profile; saveLS('gym_profile', data.profile) }
-        if (data.history) { this.history = data.history; saveLS('gym_history', data.history) }
-        if (data.personalRecords) { this.personalRecords = data.personalRecords; saveLS('gym_prs', data.personalRecords) }
-        return true
-      } catch { return false }
+        const data = JSON.parse(raw);
+        if (data.profile) {
+          this.profile = data.profile;
+          saveLS("gym_profile", data.profile);
+        }
+        if (data.history) {
+          this.history = data.history;
+          saveLS("gym_history", data.history);
+        }
+        if (data.personalRecords) {
+          this.personalRecords = data.personalRecords;
+          saveLS("gym_prs", data.personalRecords);
+        }
+        return true;
+      } catch {
+        return false;
+      }
     },
 
     resetAll() {
-      if (typeof window !== 'undefined') localStorage.clear()
-      this.profile = null
-      this.history = []
-      this.personalRecords = {}
-      this.currentExercises = []
-      this.lastAiAnalysis = ''
+      if (typeof window !== "undefined") localStorage.clear();
+      this.profile = null;
+      this.history = [];
+      this.personalRecords = {};
+      this.currentExercises = [];
+      this.lastAiAnalysis = "";
     },
   },
-})
+});
