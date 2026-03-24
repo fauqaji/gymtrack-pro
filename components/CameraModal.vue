@@ -1,39 +1,65 @@
-<!-- components/CameraModal.vue -->
 <template>
   <div class="overlay" @click.self="$emit('close')">
     <div class="modal">
-      <!-- Header -->
       <div class="modal-header">
         <button class="btn-close" @click="$emit('close')">✕</button>
         <span class="modal-title">GymTrack Share</span>
-        <button class="btn-download" @click="downloadImage" :disabled="!photoTaken">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
+        <button
+          class="btn-download"
+          @click="downloadImage"
+          :disabled="!photoTaken"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
         </button>
       </div>
 
-      <!-- Source Toggle -->
       <div class="source-row">
-        <button class="source-btn" :class="{ active: mode === 'camera' }" @click="switchMode('camera')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-            <circle cx="12" cy="13" r="4"/>
+        <button
+          class="source-btn"
+          :class="{ active: mode === 'camera' }"
+          @click="switchMode('camera')"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"
+            />
+            <circle cx="12" cy="13" r="4" />
           </svg>
           Kamera
         </button>
-        <button class="source-btn" :class="{ active: mode === 'gallery' }" @click="switchMode('gallery')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
+        <button
+          class="source-btn"
+          :class="{ active: mode === 'gallery' }"
+          @click="switchMode('gallery')"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
           </svg>
           Galeri
         </button>
       </div>
 
-      <!-- Data Source Toggle -->
       <div class="data-row">
         <span class="data-label">Data dari:</span>
         <div class="data-toggle">
@@ -56,12 +82,12 @@
         </div>
       </div>
 
-      <!-- Preview Area -->
       <div class="preview-wrap">
-        <!-- Canvas for final output -->
-        <canvas ref="canvasRef" class="preview-canvas" :class="{ visible: photoTaken }"></canvas>
-
-        <!-- Live camera -->
+        <canvas
+          ref="canvasRef"
+          class="preview-canvas"
+          :class="{ visible: photoTaken }"
+        ></canvas>
         <video
           ref="videoRef"
           class="preview-video"
@@ -71,69 +97,144 @@
           muted
         ></video>
 
-        <!-- Gallery placeholder -->
         <div
           class="gallery-placeholder"
           :class="{ visible: mode === 'gallery' && !photoTaken }"
           @click="triggerFileInput"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
           </svg>
           <span>Tap untuk pilih foto</span>
         </div>
 
-        <input ref="fileInputRef" type="file" accept="image/*" class="hidden-input" @change="onFileSelected" />
+        <input
+          ref="fileInputRef"
+          type="file"
+          accept="image/*"
+          class="hidden-input"
+          @change="onFileSelected"
+        />
 
-        <!-- Overlay preview (shown on top of video/gallery) -->
-        <div class="stats-overlay" v-if="!photoTaken && sessionData">
-          <div class="overlay-top">
-            <img src="/icon-192.png" class="overlay-icon" alt="GymTrack" />
-            <div class="overlay-app">GYMTRACK</div>
-          </div>
-          <div class="overlay-bottom">
-            <div class="overlay-type">{{ sessionData.typeName }}</div>
-            <div class="overlay-stats-row">
-              <div class="overlay-stat">
-                <div class="os-val">{{ sessionData.totalSets }}</div>
-                <div class="os-label">SETS</div>
+        <div v-if="!photoTaken && sessionData" class="stats-overlay">
+          <template v-if="activeOverlay === 0">
+            <div class="ov ov-bottom-full">
+              <div class="ov-type">{{ sessionData.typeName }}</div>
+              <div class="ov-stats-row">
+                <div class="ov-stat" v-for="s in fullStats" :key="s.label">
+                  <div class="ov-val" :class="{ accent: s.accent }">
+                    {{ s.val }}
+                  </div>
+                  <div class="ov-lbl">{{ s.label }}</div>
+                </div>
               </div>
-              <div class="os-divider"></div>
-              <div class="overlay-stat">
-                <div class="os-val">{{ sessionData.totalReps }}</div>
-                <div class="os-label">REPS</div>
-              </div>
-              <div class="os-divider"></div>
-              <div class="overlay-stat">
-                <div class="os-val">{{ formatVol(sessionData.totalVolume) }}</div>
-                <div class="os-label">VOL</div>
-              </div>
-              <div class="os-divider"></div>
-              <div class="overlay-stat">
-                <div class="os-val">{{ sessionData.maxWeight }}kg</div>
-                <div class="os-label">TERBERAT</div>
-              </div>
-              <div class="os-divider"></div>
-              <div class="overlay-stat">
-                <div class="os-val accent">{{ sessionData.hypScore }}%</div>
-                <div class="os-label">HYPER</div>
+              <div class="ov-footer">
+                <span class="ov-streak"
+                  >🔥{{ store.streakDays }} hari streak</span
+                >
+                <div class="ov-brand">
+                  <span class="ov-brandtxt">GYMTRACK</span>
+                  <img src="/icon.png" class="ov-icon" alt="GT" />
+                </div>
               </div>
             </div>
-            <div class="overlay-streak">🔥 {{ store.streakDays }} hari streak</div>
-            <!-- <div class="overlay-date">{{ todayStr }}</div> -->
-          </div>
+          </template>
+
+          <template v-else-if="activeOverlay === 1">
+            <div class="ov ov-center">
+              <div class="ov-big-num">
+                {{ sessionData.maxWeight }}<span class="ov-unit">kg</span>
+              </div>
+              <div class="ov-big-label">BEBAN TERBERAT</div>
+              <div class="ov-brandtxt-lg">GYMTRACK</div>
+              <img src="/icon.png" class="ov-icon-lg" alt="GT" />
+            </div>
+          </template>
+
+          <template v-else-if="activeOverlay === 2">
+            <div class="ov ov-split">
+              <div class="ov-split-top">
+                <img src="/icon.png" class="ov-icon" alt="GT" />
+                <div class="ov-split-brand">
+                  <div class="ov-brandtxt">GYMTRACK</div>
+                </div>
+              </div>
+              <div class="ov-split-bottom">
+                <div class="ov-split-vol">
+                  {{ formatVol(sessionData.totalVolume) }}
+                </div>
+                <div class="ov-split-vollbl">TOTAL VOLUME</div>
+                <div class="ov-split-sub">
+                  {{ sessionData.totalSets }} sets ·
+                  {{ sessionData.totalReps }} reps
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <template v-else-if="activeOverlay === 3">
+            <div class="ov ov-minimal">
+              <div class="ov-minimal-inner">
+                <div class="ov-minimal-streak">{{ store.streakDays }}🔥</div>
+                <div class="ov-minimal-label">HARI STREAK</div>
+                <div class="ov-minimal-divider"></div>
+                <div class="ov-minimal-type">{{ sessionData.typeName }}</div>
+                <div class="ov-minimal-brand">
+                  <img src="/icon.png" class="ov-icon-xs" alt="GT" />
+                  <span>GYMTRACK</span>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <template v-else-if="activeOverlay === 4">
+            <div class="ov ov-hyper">
+              <div class="ov-hyper-badge">
+                <div class="ov-hyper-pct">{{ sessionData.hypScore }}%</div>
+                <div class="ov-hyper-lbl">HYPERTROPHY</div>
+              </div>
+              <div class="ov-hyper-bottom">
+                <div class="ov-hyper-type">{{ sessionData.typeName }}</div>
+                <div class="ov-hyper-sub">
+                  {{ sessionData.totalSets }} sets ·
+                  {{ sessionData.maxWeight }}kg max
+                </div>
+                <div class="ov-brand-row">
+                  <img src="/icon.png" class="ov-icon-xs" alt="GT" />
+                  <span class="ov-brandtxt-sm">GYMTRACK</span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <div class="overlay-dots" v-if="!photoTaken">
+          <button
+            v-for="(o, i) in overlayStyles"
+            :key="i"
+            class="dot"
+            :class="{ active: activeOverlay === i }"
+            @click="activeOverlay = i"
+          >
+            {{ o.icon }}
+          </button>
         </div>
       </div>
 
-      <!-- Actions -->
       <div class="actions">
-        <template v-if="mode === 'camera' && !photoTaken">
+        <template v-if="!photoTaken">
           <button class="btn-capture" @click="capturePhoto">
             <div class="capture-ring"></div>
           </button>
         </template>
-        <template v-else-if="photoTaken">
+        <template v-else>
           <button class="btn-retake" @click="retake">↩ Ulangi</button>
           <button class="btn-save" @click="downloadImage">💾 Simpan</button>
         </template>
@@ -143,186 +244,421 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useWorkoutStore } from '~/stores/workout'
-import { calcHypertrophyScore, MONTHS_ID, DAYS_ID } from '~/composables/useData'
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useWorkoutStore } from "~/stores/workout";
+import {
+  calcHypertrophyScore,
+  MONTHS_ID,
+  DAYS_ID,
+} from "~/composables/useData";
 
-const emit = defineEmits(['close'])
-const store = useWorkoutStore()
+const emit = defineEmits(["close"]);
+const store = useWorkoutStore();
 
-const mode = ref<'camera' | 'gallery'>('camera')
-const dataSource = ref<'current' | 'last'>(
-  store.currentExercises.length > 0 ? 'current' : 'last'
-)
-const photoTaken = ref(false)
-const videoRef = ref<HTMLVideoElement | null>(null)
-const canvasRef = ref<HTMLCanvasElement | null>(null)
-const fileInputRef = ref<HTMLInputElement | null>(null)
-let stream: MediaStream | null = null
+const mode = ref<"camera" | "gallery">("camera");
+const dataSource = ref<"current" | "last">(
+  store.currentExercises.length > 0 ? "current" : "last",
+);
+const photoTaken = ref(false);
+const activeOverlay = ref(0); // Mode Overlay Aktif
+const videoRef = ref<HTMLVideoElement | null>(null);
+const canvasRef = ref<HTMLCanvasElement | null>(null);
+const fileInputRef = ref<HTMLInputElement | null>(null);
+let stream: MediaStream | null = null;
 
-// Session data computed
+const overlayStyles = [
+  { icon: "▦" },
+  { icon: "◎" },
+  { icon: "◱" },
+  { icon: "—" },
+  { icon: "◈" },
+];
+
 const sessionData = computed(() => {
-  if (dataSource.value === 'current' && store.currentExercises.length > 0) {
-    const exs = store.currentExercises
-    const totalSets = exs.reduce((a, ex) => a + ex.sets.length, 0)
-    const totalReps = exs.reduce((a, ex) => a + ex.sets.reduce((b, s) => b + (s.reps || 0), 0), 0)
-    const totalVolume = exs.reduce((a, ex) => a + ex.sets.reduce((b, s) => b + (s.reps || 0) * (s.weight || 0), 0), 0)
-    const maxWeight = Math.max(...exs.flatMap(ex => ex.sets.map(s => s.weight || 0)))
-    const hypScore = calcHypertrophyScore(exs)
-    const type = store.selectedTypeId || 'Custom Workout'
-    return { typeName: type.toUpperCase(), totalSets, totalReps, totalVolume, maxWeight, hypScore }
+  if (dataSource.value === "current" && store.currentExercises.length > 0) {
+    const exs = store.currentExercises;
+    const totalSets = exs.reduce((a, ex) => a + ex.sets.length, 0);
+    const totalReps = exs.reduce(
+      (a, ex) => a + ex.sets.reduce((b, s) => b + (s.reps || 0), 0),
+      0,
+    );
+    const totalVolume = exs.reduce(
+      (a, ex) =>
+        a + ex.sets.reduce((b, s) => b + (s.reps || 0) * (s.weight || 0), 0),
+      0,
+    );
+    const maxWeight = Math.max(
+      ...exs.flatMap((ex) => ex.sets.map((s) => s.weight || 0)),
+    );
+    const hypScore = calcHypertrophyScore(exs);
+
+    // Perbaikan nama Custom Workout
+    let type = store.selectedTypeId || "Latihan Bebas";
+    const customTpl = store.customTemplates.find(
+      (t) => t.id === store.selectedTypeId || t.name === store.selectedTypeId,
+    );
+    if (customTpl) type = customTpl.name;
+
+    return {
+      typeName: type.toUpperCase(),
+      totalSets,
+      totalReps,
+      totalVolume,
+      maxWeight,
+      hypScore,
+    };
   }
-  if (dataSource.value === 'last' && store.history.length > 0) {
-    const s = store.history[0]
-    const maxWeight = Math.max(...s.exercises.flatMap(ex => ex.sets.map(set => set.weight || 0)))
-    return { typeName: s.typeName.toUpperCase(), totalSets: s.totalSets, totalReps: s.totalReps, totalVolume: s.totalVolume, maxWeight, hypScore: s.hypScore }
+  if (dataSource.value === "last" && store.history.length > 0) {
+    const s = store.history[0];
+    const maxWeight = Math.max(
+      ...s.exercises.flatMap((ex) => ex.sets.map((set) => set.weight || 0)),
+    );
+    return {
+      typeName: s.typeName.toUpperCase(),
+      totalSets: s.totalSets,
+      totalReps: s.totalReps,
+      totalVolume: s.totalVolume,
+      maxWeight,
+      hypScore: s.hypScore,
+    };
   }
-  return null
-})
+  return null;
+});
 
 const todayStr = computed(() => {
-  const d = new Date()
-  return `${DAYS_ID[(d.getDay() + 6) % 7]}, ${d.getDate()} ${MONTHS_ID[d.getMonth()]} ${d.getFullYear()}`
-})
+  const d = new Date();
+  return `${DAYS_ID[(d.getDay() + 6) % 7]}, ${d.getDate()} ${MONTHS_ID[d.getMonth()]} ${d.getFullYear()}`;
+});
+
+const fullStats = computed(() =>
+  sessionData.value
+    ? [
+        { val: String(sessionData.value.totalSets), label: "SETS" },
+        { val: String(sessionData.value.totalReps), label: "REPS" },
+        { val: formatVol(sessionData.value.totalVolume), label: "VOL" },
+        { val: sessionData.value.maxWeight + "kg", label: "MAX" },
+        { val: sessionData.value.hypScore + "%", label: "HYPER", accent: true },
+      ]
+    : [],
+);
 
 function formatVol(v: number) {
-  return v >= 1000 ? (v / 1000).toFixed(1) + 't' : v + 'kg'
+  return v >= 1000 ? (v / 1000).toFixed(1) + "t" : v + "kg";
 }
 
-// Camera
 async function startCamera() {
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
-    if (videoRef.value) videoRef.value.srcObject = stream
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" },
+      audio: false,
+    });
+    if (videoRef.value) videoRef.value.srcObject = stream;
   } catch (e) {
-    console.error('Camera error:', e)
+    console.error("Camera error:", e);
   }
 }
 
 function stopCamera() {
-  stream?.getTracks().forEach(t => t.stop())
-  stream = null
+  stream?.getTracks().forEach((t) => t.stop());
+  stream = null;
 }
 
-function switchMode(m: 'camera' | 'gallery') {
-  mode.value = m
-  photoTaken.value = false
-  if (m === 'camera') startCamera()
-  else stopCamera()
+function switchMode(m: "camera" | "gallery") {
+  mode.value = m;
+  photoTaken.value = false;
+  if (m === "camera") startCamera();
+  else stopCamera();
 }
 
 function triggerFileInput() {
-  fileInputRef.value?.click()
+  fileInputRef.value?.click();
 }
 
 function onFileSelected(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
-  if (!file) return
-  const img = new Image()
-  img.onload = () => drawOverlay(img)
-  img.src = URL.createObjectURL(file)
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  const img = new Image();
+  img.onload = () => drawOverlay(img);
+  img.src = URL.createObjectURL(file);
 }
 
 function capturePhoto() {
-  if (!videoRef.value || !canvasRef.value) return
-  const video = videoRef.value
-  drawOverlay(video)
+  if (!videoRef.value || !canvasRef.value) return;
+  drawOverlay(videoRef.value);
+}
+
+function roundRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
 
 function drawOverlay(source: HTMLVideoElement | HTMLImageElement) {
-  const canvas = canvasRef.value!
-  const W = 1080
-  const H = 1980
-  canvas.width = W
-  canvas.height = H
-  const ctx = canvas.getContext('2d')!
+  const canvas = canvasRef.value!;
+  const wrap = canvas.parentElement!;
+  const rect = wrap.getBoundingClientRect();
+  
+  // Mengikuti rasio asli layar HP secara dinamis
+  const W = 1080;
+  const H = Math.round(W * (rect.height / rect.width));
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d")!;
 
-  // Draw source image/video
-  const sw = source instanceof HTMLVideoElement ? source.videoWidth : (source as HTMLImageElement).naturalWidth
-  const sh = source instanceof HTMLVideoElement ? source.videoHeight : (source as HTMLImageElement).naturalHeight
-  const scale = Math.max(W / sw, H / sh)
-  const dx = (W - sw * scale) / 2
-  const dy = (H - sh * scale) / 2
-  ctx.drawImage(source, dx, dy, sw * scale, sh * scale)
+  const sw = source instanceof HTMLVideoElement ? source.videoWidth : (source as HTMLImageElement).naturalWidth;
+  const sh = source instanceof HTMLVideoElement ? source.videoHeight : (source as HTMLImageElement).naturalHeight;
+  const scale = Math.max(W / sw, H / sh);
+  const dx = (W - sw * scale) / 2;
+  const dy = (H - sh * scale) / 2;
+  ctx.drawImage(source, dx, dy, sw * scale, sh * scale);
 
-  // Dark gradient bottom
-  const grad = ctx.createLinearGradient(0, H * 0.45, 0, H)
-  grad.addColorStop(0, 'rgba(0,0,0,0)')
-  grad.addColorStop(0.4, 'rgba(0,0,0,0.7)')
-  grad.addColorStop(1, 'rgba(0,0,0,0.92)')
-  ctx.fillStyle = grad
-  ctx.fillRect(0, 0, W, H)
+  // BUG FIX: Memanggil file logo yang benar agar galeri tidak macet
+  const logo = new Image();
+  logo.src = "/icon.png"; 
 
-  // Top left: icon-192.png
-  const logo = new Image()
-  logo.src = '/icon-192.png'
-  const drawRest = () => {
-    // Draw icon
-    ctx.drawImage(logo, 40, 40, 64, 64)
-    ctx.fillStyle = 'rgba(255,255,255,0.7)'
-    ctx.font = '500 22px monospace'
-    ctx.fillText('GYMTRACK', 116, 80)
+  const draw = () => {
+    if (!sessionData.value) {
+      photoTaken.value = true;
+      stopCamera();
+      return;
+    }
+    const d = sessionData.value;
+    const style = activeOverlay.value;
 
-    if (!sessionData.value) return
-    const d = sessionData.value
+    if (style === 0) {
+      // STYLE 1: Bottom Full - Sudah dirapatkan dan disesuaikan
+      const grad = ctx.createLinearGradient(0, H * 0.45, 0, H);
+      grad.addColorStop(0, "rgba(0,0,0,0)");
+      grad.addColorStop(0.5, "rgba(0,0,0,0.6)");
+      grad.addColorStop(1, "rgba(0,0,0,0.92)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
 
-    // Type name
-    ctx.fillStyle = '#C8F135'
-    ctx.font = 'bold 64px sans-serif'
-    ctx.fillText(d.typeName, 48, H - 260)
+      const pad = 48;
+      const bottom = H - 40; // Titik dasar rapat bawah
 
-    // Stats row — sekarang 5 kolom
-    const stats = [
-      { val: String(d.totalSets), label: 'SETS' },
-      { val: String(d.totalReps), label: 'REPS' },
-      { val: formatVol(d.totalVolume), label: 'VOLUME' },
-      { val: d.maxWeight + 'kg', label: 'TERBERAT' },
-      { val: d.hypScore + '%', label: 'HYPER', accent: true },
-    ]
-    const colW = (W - 96) / stats.length
-    stats.forEach((s, i) => {
-      const x = 48 + i * colW
-      ctx.fillStyle = s.accent ? '#C8F135' : '#ffffff'
-      ctx.font = 'bold 44px sans-serif'
-      ctx.fillText(s.val, x, H - 160)
-      ctx.fillStyle = 'rgba(255,255,255,0.5)'
-      ctx.font = '500 18px sans-serif'
-      ctx.fillText(s.label, x, H - 128)
-    })
+      // Footer: Logo Kanan, Streak Kiri
+      const logoSize = 56;
+      const logoX = W - pad - logoSize;
+      const logoY = bottom - logoSize;
+      ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+      
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.font = "700 24px monospace";
+      ctx.textAlign = "right";
+      ctx.fillText("GYMTRACK", logoX - 12, bottom - 18);
+      ctx.textAlign = "left";
 
-    // Streak & date
-    ctx.fillStyle = 'rgba(255,255,255,0.6)'
-    ctx.font = '500 24px sans-serif'
-    ctx.fillText(`🔥 ${store.streakDays} hari streak  ·  ${todayStr.value}`, 48, H - 72)
+      ctx.fillStyle = "rgba(255,255,255,0.6)";
+      ctx.font = "500 28px sans-serif";
+      ctx.fillText(`🔥 ${store.streakDays} hari streak`, pad, bottom - 14);
 
-    photoTaken.value = true
-    stopCamera()
-  }
+      // Stats (Jarak dirapatkan ke footer)
+      const statsY = bottom - 96;
+      const stats = [
+        { val: String(d.totalSets), label: "SETS" },
+        { val: String(d.totalReps), label: "REPS" },
+        { val: formatVol(d.totalVolume), label: "VOL" },
+        { val: d.maxWeight + "kg", label: "MAX" },
+        { val: d.hypScore + "%", label: "HYPER", accent: true },
+      ];
+      const colW = (W - pad * 2) / stats.length;
+      stats.forEach((s, i) => {
+        const x = pad + i * colW;
+        ctx.fillStyle = s.accent ? "#C8F135" : "#fff";
+        ctx.font = "bold 44px sans-serif";
+        ctx.fillText(s.val, x, statsY);
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.font = "500 20px sans-serif";
+        ctx.fillText(s.label, x, statsY + 30);
+      });
 
+      // Type Name (Dikecilkan dan dirapatkan ke stats)
+      ctx.fillStyle = "#C8F135";
+      ctx.font = "bold 36px sans-serif"; // Ukuran font diperkecil
+      ctx.fillText(d.typeName, pad, statsY - 54);
+
+    } else if (style === 1) {
+      // STYLE 2: Center - Margin diperbaiki agar tidak berceceran
+      const grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W * 0.8);
+      grad.addColorStop(0, "rgba(0,0,0,0.15)");
+      grad.addColorStop(1, "rgba(0,0,0,0.65)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      const cy = H / 2;
+      ctx.textAlign = "center";
+
+      // 1. Max Weight (Angka Beban)
+      ctx.fillStyle = "#C8F135";
+      ctx.font = "bold 180px sans-serif";
+      ctx.fillText(String(d.maxWeight), W/2, cy - 40);
+      
+      // 1b. Satuan "kg" (Sejajar di sebelah kanan atas angka beban)
+      const tw = ctx.measureText(String(d.maxWeight)).width;
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.font = "600 32px sans-serif";
+      ctx.fillText("kg", W/2 + tw/2 + 28, cy - 82);
+
+      // 2. Teks "BEBAN TERBERAT"
+      ctx.fillStyle = "rgba(255,255,255,0.55)";
+      ctx.font = "800 35px sans-serif";
+      ctx.fillText("BEBAN TERBERAT", W/2, cy + 30);
+
+      // 3. Teks "GYMTRACK"
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.font = "800 45px monospace";
+      ctx.fillText("GYMTRACK", W/2, cy + 100);
+
+      // 4. Logo GymTrack
+      ctx.drawImage(logo, W/2 - 40, cy + 130, 80, 80);
+      
+      ctx.textAlign = "left";
+
+    } else if (style === 2) {
+      // STYLE 3: Split
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, "rgba(0,0,0,0.55)");
+      grad.addColorStop(0.35, "rgba(0,0,0,0)");
+      grad.addColorStop(0.65, "rgba(0,0,0,0)");
+      grad.addColorStop(1, "rgba(0,0,0,0.88)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.drawImage(logo, 48, 48, 64, 64);
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.font = "700 26px monospace";
+      ctx.fillText("GYMTRACK", 128, 76);
+      
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#C8F135";
+      ctx.font = "bold 120px sans-serif";
+      ctx.fillText(formatVol(d.totalVolume), W - 48, H - 110);
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.font = "600 22px sans-serif";
+      ctx.fillText("TOTAL VOLUME", W - 48, H - 70);
+      ctx.fillStyle = "rgba(255,255,255,0.6)";
+      ctx.font = "500 32px sans-serif";
+      ctx.fillText(`${d.totalSets} sets · ${d.totalReps} reps`, W - 48, H - 36);
+      ctx.textAlign = "left";
+
+    } else if (style === 3) {
+      // STYLE 4: Minimal
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      
+      // Kotak ditinggikan menjadi 280px agar Logo dan Teks GymTrack muat di dalamnya
+      roundRect(ctx, W/2 - 340, H - 320, 680, 280, 20);
+      ctx.fill();
+
+      ctx.textAlign = "center";
+      
+      // Angka Streak
+      ctx.fillStyle = "#C8F135";
+      ctx.font = "bold 56px sans-serif";
+      ctx.fillText(`${store.streakDays}🔥`, W/2, H - 240);
+      
+      // Teks HARI STREAK
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.font = "500 18px sans-serif";
+      ctx.fillText("HARI STREAK", W/2, H - 210);
+      
+      // Garis pemisah
+      ctx.fillStyle = "rgba(255,255,255,0.2)";
+      ctx.fillRect(W/2 - 60, H - 190, 120, 1.5);
+
+      // Teks Nama Latihan (Sesuai kode Anda)
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.font = "700 22px sans-serif"; 
+      ctx.fillText(d.typeName, W/2, H - 155);
+      
+      // Logo GymTrack (Sumbu Y menggunakan Min (-), Lebar/Tinggi disesuaikan 60 agar proporsional)
+      ctx.drawImage(logo, W/2 - 30, H - 135, 45, 45);
+
+      // Teks "GYMTRACK" (Ditaruh tepat di bawah logo)
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.font = "800 25px monospace";
+      ctx.fillText("GYMTRACK", W/2, H - 55);
+
+      ctx.textAlign = "left";
+
+    } else if (style === 4) {
+      // STYLE 5: Hyper
+      const grad = ctx.createLinearGradient(0, H * 0.6, 0, H);
+      grad.addColorStop(0, "rgba(0,0,0,0)");
+      grad.addColorStop(1, "rgba(0,0,0,0.9)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.fillStyle = "#C8F135";
+      roundRect(ctx, W - 280, 48, 240, 110, 20);
+      ctx.fill();
+      ctx.fillStyle = "#0f1117";
+      ctx.font = "bold 60px sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(d.hypScore + "%", W - 60, 110);
+      ctx.font = "700 18px sans-serif";
+      ctx.fillText("HYPERTROPHY", W - 60, 140);
+      ctx.textAlign = "left";
+
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 33px sans-serif";
+      ctx.fillText(d.typeName, 48, H - 120);
+      
+      ctx.fillStyle = "rgba(255,255,255,0.55)";
+      ctx.font = "500 24px sans-serif";
+      ctx.fillText(`${d.totalSets} sets · ${d.maxWeight}kg max`, 48, H - 80);
+      
+      ctx.drawImage(logo, 48, H - 56, 28, 28);
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.font = "500 20px sans-serif";
+      ctx.fillText(`GYMTRACK`, 86, H - 36);
+    }
+
+    photoTaken.value = true;
+    stopCamera();
+  };
+
+  // Pastikan tetap berjalan walau logo gagal dimuat (fallback)
   if (logo.complete) {
-    drawRest()
+    draw();
   } else {
-    logo.onload = drawRest
+    logo.onload = draw;
+    logo.onerror = draw;
   }
 }
 
 function retake() {
-  photoTaken.value = false
-  if (mode.value === 'camera') startCamera()
+  photoTaken.value = false;
+  if (mode.value === "camera") startCamera();
 }
 
 function downloadImage() {
-  if (!canvasRef.value) return
-  const link = document.createElement('a')
-  link.download = `gymtrack-${Date.now()}.jpg`
-  link.href = canvasRef.value.toDataURL('image/jpeg', 0.92)
-  link.click()
+  if (!canvasRef.value) return;
+  const link = document.createElement("a");
+  link.download = `gymtrack-${Date.now()}.jpg`;
+  link.href = canvasRef.value.toDataURL("image/jpeg", 0.92);
+  link.click();
 }
 
 onMounted(() => {
-  if (mode.value === 'camera') startCamera()
-})
-onUnmounted(() => stopCamera())
+  if (mode.value === "camera") startCamera();
+});
+onUnmounted(() => stopCamera());
 </script>
 
 <style scoped>
@@ -344,8 +680,6 @@ onUnmounted(() => stopCamera())
   overflow: hidden;
   border-top: 1px solid var(--border);
 }
-
-/* Header */
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -389,7 +723,6 @@ onUnmounted(() => stopCamera())
   cursor: not-allowed;
 }
 
-/* Source & Data toggles */
 .source-row {
   display: flex;
   gap: 8px;
@@ -466,7 +799,6 @@ onUnmounted(() => stopCamera())
   cursor: not-allowed;
 }
 
-/* Preview */
 .preview-wrap {
   flex: 1;
   position: relative;
@@ -516,89 +848,335 @@ onUnmounted(() => stopCamera())
   display: none;
 }
 
-/* Stats overlay on live preview */
 .stats-overlay {
   position: absolute;
   inset: 0;
+  pointer-events: none;
+  border-radius: 16px;
+}
+
+/* Dot selector Overlay Mode */
+.overlay-dots {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  pointer-events: all;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 6px 10px;
+  border-radius: 50px;
+}
+.dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dot.active {
+  background: var(--accent);
+  color: #0f1117;
+  border-color: var(--accent);
+}
+
+/* Base overlay */
+.ov {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+}
+
+/* =========================================
+   STYLE 1: ov-bottom-full (DIREVISI UKURAN)
+   ========================================= */
+.ov-bottom-full {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 16px;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 40%,
+    rgba(0, 0, 0, 0.9) 100%
+  );
+}
+.ov-type {
+  font-family: "Syne", sans-serif;
+  font-size: 14px; /* Huruf diperkecil */
+  font-weight: 800;
+  color: #c8f135;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+.ov-stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.ov-stat {
+  display: flex;
+  flex-direction: column;
+}
+.ov-val {
+  font-family: "Syne", sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+.ov-val.accent {
+  color: #c8f135;
+}
+.ov-lbl {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+/* Logo ditaruh kanan bawah */
+.ov-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.ov-streak {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+}
+.ov-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ov-brandtxt {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.1em;
+}
+.ov-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+/* STYLE 2: Center */
+.ov-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+}
+.ov-icon-lg {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  object-fit: contain;
+}
+.ov-brandtxt-lg {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.15em;
+}
+.ov-big-num {
+  font-family: "Syne", sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: #c8f135;
+  line-height: 1;
+}
+.ov-unit {
+  font-size: 36px;
+  color: rgba(255, 255, 255, 0.6);
+}
+.ov-big-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.12em;
+}
+
+/* STYLE 3: Split */
+.ov-split {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 16px;
   background: linear-gradient(
     to bottom,
-    rgba(0,0,0,0) 40%,
-    rgba(0,0,0,0.85) 100%
+    rgba(0, 0, 0, 0.5) 0%,
+    rgba(0, 0, 0, 0) 35%,
+    rgba(0, 0, 0, 0) 65%,
+    rgba(0, 0, 0, 0.88) 100%
   );
-  border-radius: 16px;
-  pointer-events: none;
 }
-.overlay-top {
+.ov-split-top {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
-.overlay-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  object-fit: contain;
-}
-.overlay-app {
-  font-size: 11px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.6);
-  letter-spacing: 0.12em;
-}
-.overlay-bottom {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.overlay-type {
-  font-family: "Syne", sans-serif;
-  font-size: 22px;
-  font-weight: 800;
-  color: #C8F135;
-  letter-spacing: -0.3px;
-}
-.overlay-stats-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.overlay-stat {
+.ov-split-brand {
   display: flex;
   flex-direction: column;
 }
-.os-val {
+.ov-split-bottom {
+  text-align: right;
+}
+.ov-split-vol {
   font-family: "Syne", sans-serif;
-  font-size: 18px;
+  font-size: 52px;
   font-weight: 800;
-  color: #fff;
+  color: #c8f135;
   line-height: 1;
 }
-.os-val.accent {
-  color: #C8F135;
-}
-.os-label {
-  font-size: 9px;
-  color: rgba(255,255,255,0.5);
-  letter-spacing: 0.08em;
+.ov-split-vollbl {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.1em;
   margin-top: 2px;
 }
-.os-divider {
-  width: 1px;
-  height: 28px;
-  background: rgba(255,255,255,0.2);
-}
-.overlay-streak {
+.ov-split-sub {
   font-size: 12px;
-  color: rgba(255,255,255,0.6);
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 4px;
 }
-/* .overlay-date {
-  font-size: 11px;
-  color: rgba(255,255,255,0.4);
-} */
+
+/* STYLE 4: Minimal */
+.ov-minimal {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 48px;
+}
+.ov-minimal-inner {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 14px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  backdrop-filter: blur(8px);
+}
+.ov-minimal-streak {
+  font-family: "Syne", sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  color: #c8f135;
+}
+.ov-minimal-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.1em;
+}
+.ov-minimal-divider {
+  width: 40px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 4px 0;
+}
+.ov-minimal-type {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 0.05em;
+}
+.ov-minimal-brand {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+}
+.ov-icon-xs {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  object-fit: contain;
+}
+.ov-minimal-brand span {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.1em;
+}
+
+/* STYLE 5: Hyper */
+.ov-hyper {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 40%,
+    rgba(0, 0, 0, 0.9) 100%
+  );
+}
+.ov-hyper-badge {
+  align-self: flex-end;
+  background: #c8f135;
+  border-radius: 12px;
+  padding: 3px 10px;
+  text-align: right;
+}
+.ov-hyper-pct {
+  font-family: "Syne", sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: #0f1117;
+  line-height: 1;
+}
+.ov-hyper-lbl {
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.6);
+  letter-spacing: 0.1em;
+}
+.ov-hyper-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ov-hyper-type {
+  font-family: "Syne", sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+}
+.ov-hyper-sub {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+.ov-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+.ov-brandtxt-sm {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.08em;
+}
 
 /* Actions */
 .actions {

@@ -317,12 +317,26 @@ export const useWorkoutStore = defineStore("workout", {
         ? Math.round((Date.now() - this.sessionStartTime) / 60000)
         : undefined;
 
+      // 👇 BLOK KODE BARU: Mencegat dan mencari nama paket custom 👇
+      let finalTypeName = typeName;
+      if (finalTypeName === 'Custom Workout' || !finalTypeName) {
+        const customTpl = this.customTemplates.find(t => t.id === this.selectedTypeId || t.name === this.selectedTypeId);
+        if (customTpl) {
+          finalTypeName = customTpl.name; // Ambil dari daftar template
+        } else if (this.selectedTypeId) {
+          finalTypeName = this.selectedTypeId; // Ambil langsung jika isinya string nama
+        } else {
+          finalTypeName = 'Workout'; // Fallback jika tidak ada nama yang valid
+        }
+      }
+      // 👆 SELESAI BLOK KODE BARU 👆
+
       const session: WorkoutSession = {
         id: Date.now(),
         date: new Date().toISOString(),
         day: dayName,
         typeId: this.selectedTypeId,
-        typeName,
+        typeName: finalTypeName, // <-- Menggunakan nama yang sudah diperbaiki
         exercises,
         totalVolume,
         totalSets,
