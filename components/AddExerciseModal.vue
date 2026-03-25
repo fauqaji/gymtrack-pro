@@ -2,7 +2,10 @@
   <div class="overlay" @click.self="$emit('close')">
     <div class="sheet">
       <div class="handle"></div>
-      <h3>{{ isCreatingDaily ? "Pilih Gerakan Paket" : "Pilih Latihan" }}</h3>
+      <div class="sheet-header">
+        <h3>{{ isCreatingDaily ? "Pilih Gerakan Paket" : "Pilih Latihan" }}</h3>
+        <button class="btn-close" @click="$emit('close')" @contextmenu.prevent>✕</button>
+      </div>
 
       <div class="cat-row">
         <button
@@ -272,6 +275,14 @@ function add(id: string) {
 </script>
 
 <style scoped>
+/* Prevent text selection and context menu */
+.sheet,
+.sheet * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .overlay {
   position: fixed;
   inset: 0;
@@ -298,11 +309,36 @@ function add(id: string) {
   border-radius: 2px;
   margin: 0 auto 16px;
 }
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
 h3 {
   font-family: "Syne", sans-serif;
   font-size: 18px;
   font-weight: 800;
-  margin-bottom: 14px;
+  margin: 0;
+}
+.btn-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text2);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.btn-close:hover {
+  background: var(--red);
+  color: white;
+  border-color: var(--red);
 }
 .tab-container {
   display: flex;

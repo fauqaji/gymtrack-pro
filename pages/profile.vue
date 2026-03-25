@@ -195,6 +195,14 @@ function resetAll() {
 </script>
 
 <style scoped>
+/* Prevent text selection and context menu */
+.page,
+.page * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .page { background: var(--bg); min-height: 100vh; }
 .header { padding: 52px 20px 8px; }
 .date-text { font-size: 13px; color: var(--text2); margin-bottom: 2px; }

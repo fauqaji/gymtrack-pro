@@ -1,7 +1,7 @@
 <!-- components/AppNav.vue -->
 <template>
-  <nav class="nav">
-    <NuxtLink to="/" class="nav-btn" active-class="active" exact>
+  <nav class="nav" @contextmenu.prevent>
+    <NuxtLink to="/" class="nav-btn" active-class="active" exact @contextmenu.prevent>
       <svg
         viewBox="0 0 24 24"
         fill="none"
@@ -16,7 +16,7 @@
       </svg>
       <span>Home</span>
     </NuxtLink>
-    <NuxtLink to="/progress" class="nav-btn" active-class="active">
+    <NuxtLink to="/progress" class="nav-btn" active-class="active" @contextmenu.prevent>
       <svg
         viewBox="0 0 24 24"
         fill="none"
@@ -49,7 +49,7 @@
       </div>
     </button>
 
-    <NuxtLink to="/history" class="nav-btn" active-class="active">
+    <NuxtLink to="/history" class="nav-btn" active-class="active" @contextmenu.prevent>
       <svg
         viewBox="0 0 24 24"
         fill="none"
@@ -63,7 +63,7 @@
       </svg>
       <span>Riwayat</span>
     </NuxtLink>
-    <NuxtLink to="/profile" class="nav-btn" active-class="active">
+    <NuxtLink to="/profile" class="nav-btn" active-class="active" @contextmenu.prevent>
       <svg
         viewBox="0 0 24 24"
         fill="none"
@@ -85,6 +85,14 @@ defineEmits(["openCamera"]);
 </script>
 
 <style scoped>
+/* Prevent text selection and context menu on touch */
+.nav,
+.nav * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .nav {
   position: fixed;
   bottom: 0;

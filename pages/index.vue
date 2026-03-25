@@ -114,7 +114,7 @@
         class="type-card"
         @click="selectCustomTemplate(tpl)"
       >
-        <span class="type-emoji">📅</span>
+        <span class="type-emoji">🗓️</span>
         <span class="type-name">{{ tpl.name }}</span>
         <span class="type-desc">{{ tpl.suggestions.length }} Latihan</span>
       </div>
@@ -350,6 +350,14 @@ async function handleFinish() {
 </script>
 
 <style scoped>
+/* Prevent text selection and context menu */
+.page,
+.page * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .page {
   background: var(--bg);
   min-height: 100vh;

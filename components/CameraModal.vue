@@ -412,7 +412,7 @@ function drawOverlay(source: HTMLVideoElement | HTMLImageElement) {
   const canvas = canvasRef.value!;
   const wrap = canvas.parentElement!;
   const rect = wrap.getBoundingClientRect();
-  
+
   // Mengikuti rasio asli layar HP secara dinamis
   const W = 1080;
   const H = Math.round(W * (rect.height / rect.width));
@@ -420,8 +420,14 @@ function drawOverlay(source: HTMLVideoElement | HTMLImageElement) {
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
 
-  const sw = source instanceof HTMLVideoElement ? source.videoWidth : (source as HTMLImageElement).naturalWidth;
-  const sh = source instanceof HTMLVideoElement ? source.videoHeight : (source as HTMLImageElement).naturalHeight;
+  const sw =
+    source instanceof HTMLVideoElement
+      ? source.videoWidth
+      : (source as HTMLImageElement).naturalWidth;
+  const sh =
+    source instanceof HTMLVideoElement
+      ? source.videoHeight
+      : (source as HTMLImageElement).naturalHeight;
   const scale = Math.max(W / sw, H / sh);
   const dx = (W - sw * scale) / 2;
   const dy = (H - sh * scale) / 2;
@@ -429,7 +435,7 @@ function drawOverlay(source: HTMLVideoElement | HTMLImageElement) {
 
   // BUG FIX: Memanggil file logo yang benar agar galeri tidak macet
   const logo = new Image();
-  logo.src = "/icon.png"; 
+  logo.src = "/icon.png";
 
   const draw = () => {
     if (!sessionData.value) {
@@ -441,7 +447,6 @@ function drawOverlay(source: HTMLVideoElement | HTMLImageElement) {
     const style = activeOverlay.value;
 
     if (style === 0) {
-      // STYLE 1: Bottom Full - Sudah dirapatkan dan disesuaikan
       const grad = ctx.createLinearGradient(0, H * 0.45, 0, H);
       grad.addColorStop(0, "rgba(0,0,0,0)");
       grad.addColorStop(0.5, "rgba(0,0,0,0.6)");
@@ -450,25 +455,23 @@ function drawOverlay(source: HTMLVideoElement | HTMLImageElement) {
       ctx.fillRect(0, 0, W, H);
 
       const pad = 48;
-      const bottom = H - 40; // Titik dasar rapat bawah
+      const bottom = H - 40;
 
-      // Footer: Logo Kanan, Streak Kiri
       const logoSize = 56;
       const logoX = W - pad - logoSize;
       const logoY = bottom - logoSize;
       ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
-      
+
       ctx.fillStyle = "rgba(255,255,255,0.7)";
-      ctx.font = "700 24px monospace";
+      ctx.font = "700 24px 'Syne', sans-serif";
       ctx.textAlign = "right";
       ctx.fillText("GYMTRACK", logoX - 12, bottom - 18);
       ctx.textAlign = "left";
 
       ctx.fillStyle = "rgba(255,255,255,0.6)";
-      ctx.font = "500 28px sans-serif";
+      ctx.font = "500 28px 'Syne', sans-serif";
       ctx.fillText(`🔥 ${store.streakDays} hari streak`, pad, bottom - 14);
 
-      // Stats (Jarak dirapatkan ke footer)
       const statsY = bottom - 96;
       const stats = [
         { val: String(d.totalSets), label: "SETS" },
@@ -481,57 +484,61 @@ function drawOverlay(source: HTMLVideoElement | HTMLImageElement) {
       stats.forEach((s, i) => {
         const x = pad + i * colW;
         ctx.fillStyle = s.accent ? "#C8F135" : "#fff";
-        ctx.font = "bold 44px sans-serif";
+        ctx.font = "bold 44px 'Syne', sans-serif";
         ctx.fillText(s.val, x, statsY);
         ctx.fillStyle = "rgba(255,255,255,0.5)";
-        ctx.font = "500 20px sans-serif";
+        ctx.font = "500 20px 'Syne', sans-serif";
         ctx.fillText(s.label, x, statsY + 30);
       });
 
-      // Type Name (Dikecilkan dan dirapatkan ke stats)
       ctx.fillStyle = "#C8F135";
-      ctx.font = "bold 36px sans-serif"; // Ukuran font diperkecil
+      ctx.font = "bold 36px 'Syne', sans-serif";
       ctx.fillText(d.typeName, pad, statsY - 54);
-
     } else if (style === 1) {
-      // STYLE 2: Center - Margin diperbaiki agar tidak berceceran
-      const grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W * 0.8);
+      const grad = ctx.createRadialGradient(
+        W / 2,
+        H / 2,
+        0,
+        W / 2,
+        H / 2,
+        W * 0.8,
+      );
       grad.addColorStop(0, "rgba(0,0,0,0.15)");
       grad.addColorStop(1, "rgba(0,0,0,0.65)");
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, W, H);
 
       const cy = H / 2;
-      ctx.textAlign = "center";
-
-      // 1. Max Weight (Angka Beban)
-      ctx.fillStyle = "#C8F135";
-      ctx.font = "bold 180px sans-serif";
-      ctx.fillText(String(d.maxWeight), W/2, cy - 40);
-      
-      // 1b. Satuan "kg" (Sejajar di sebelah kanan atas angka beban)
-      const tw = ctx.measureText(String(d.maxWeight)).width;
-      ctx.fillStyle = "rgba(255,255,255,0.5)";
-      ctx.font = "600 32px sans-serif";
-      ctx.fillText("kg", W/2 + tw/2 + 28, cy - 82);
-
-      // 2. Teks "BEBAN TERBERAT"
-      ctx.fillStyle = "rgba(255,255,255,0.55)";
-      ctx.font = "800 35px sans-serif";
-      ctx.fillText("BEBAN TERBERAT", W/2, cy + 30);
-
-      // 3. Teks "GYMTRACK"
-      ctx.fillStyle = "rgba(255,255,255,0.7)";
-      ctx.font = "800 45px monospace";
-      ctx.fillText("GYMTRACK", W/2, cy + 100);
-
-      // 4. Logo GymTrack
-      ctx.drawImage(logo, W/2 - 40, cy + 130, 80, 80);
-      
       ctx.textAlign = "left";
 
+      ctx.font = "bold 120px 'Syne', sans-serif";
+      const numWidth = ctx.measureText(String(d.maxWeight)).width;
+      ctx.font = "600 60px 'Syne', sans-serif";
+      const kgWidth = ctx.measureText("kg").width;
+
+      const totalWidth = numWidth + 12 + kgWidth;
+      const startX = W / 2 - totalWidth / 2 - 20;
+
+      ctx.fillStyle = "#C8F135";
+      ctx.font = "bold 120px 'Syne', sans-serif";
+      ctx.fillText(String(d.maxWeight), startX, cy - 40);
+
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.font = "600 90px 'Syne', sans-serif";
+      ctx.fillText("kg", startX + numWidth + 12, cy - 35);
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = "rgba(255,255,255,0.55)";
+      ctx.font = "700 40px 'Syne', sans-serif";
+      ctx.fillText("BEBAN TERBERAT", W / 2, cy + 30);
+
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.font = "700 45px 'Syne', sans-serif";
+      ctx.fillText("GYMTRACK", W / 2, cy + 100);
+
+      ctx.drawImage(logo, W / 2 - 40, cy + 130, 80, 80);
+      ctx.textAlign = "left";
     } else if (style === 2) {
-      // STYLE 3: Split
       const grad = ctx.createLinearGradient(0, 0, 0, H);
       grad.addColorStop(0, "rgba(0,0,0,0.55)");
       grad.addColorStop(0.35, "rgba(0,0,0,0)");
@@ -542,62 +549,50 @@ function drawOverlay(source: HTMLVideoElement | HTMLImageElement) {
 
       ctx.drawImage(logo, 48, 48, 64, 64);
       ctx.fillStyle = "rgba(255,255,255,0.7)";
-      ctx.font = "700 26px monospace";
+      ctx.font = "700 26px 'Syne', sans-serif";
       ctx.fillText("GYMTRACK", 128, 76);
-      
+
       ctx.textAlign = "right";
       ctx.fillStyle = "#C8F135";
-      ctx.font = "bold 120px sans-serif";
-      ctx.fillText(formatVol(d.totalVolume), W - 48, H - 110);
+      ctx.font = "bold 120px 'Syne', sans-serif";
+      ctx.fillText(formatVol(d.totalVolume), W - 48, H - 120);
       ctx.fillStyle = "rgba(255,255,255,0.5)";
-      ctx.font = "600 22px sans-serif";
+      ctx.font = "600 22px 'Syne', sans-serif";
       ctx.fillText("TOTAL VOLUME", W - 48, H - 70);
       ctx.fillStyle = "rgba(255,255,255,0.6)";
-      ctx.font = "500 32px sans-serif";
+      ctx.font = "500 32px 'Syne', sans-serif";
       ctx.fillText(`${d.totalSets} sets · ${d.totalReps} reps`, W - 48, H - 36);
       ctx.textAlign = "left";
-
     } else if (style === 3) {
-      // STYLE 4: Minimal
       ctx.fillStyle = "rgba(0,0,0,0.5)";
-      
-      // Kotak ditinggikan menjadi 280px agar Logo dan Teks GymTrack muat di dalamnya
-      roundRect(ctx, W/2 - 340, H - 320, 680, 280, 20);
+      roundRect(ctx, W / 2 - 340, H - 320, 680, 280, 20);
       ctx.fill();
 
       ctx.textAlign = "center";
-      
-      // Angka Streak
+
       ctx.fillStyle = "#C8F135";
-      ctx.font = "bold 56px sans-serif";
-      ctx.fillText(`${store.streakDays}🔥`, W/2, H - 240);
-      
-      // Teks HARI STREAK
+      ctx.font = "bold 56px 'Syne', sans-serif";
+      ctx.fillText(`${store.streakDays}🔥`, W / 2, H - 240);
+
       ctx.fillStyle = "rgba(255,255,255,0.5)";
-      ctx.font = "500 18px sans-serif";
-      ctx.fillText("HARI STREAK", W/2, H - 210);
-      
-      // Garis pemisah
+      ctx.font = "500 18px 'Syne', sans-serif";
+      ctx.fillText("HARI STREAK", W / 2, H - 210);
+
       ctx.fillStyle = "rgba(255,255,255,0.2)";
-      ctx.fillRect(W/2 - 60, H - 190, 120, 1.5);
+      ctx.fillRect(W / 2 - 60, H - 190, 120, 1.5);
 
-      // Teks Nama Latihan (Sesuai kode Anda)
       ctx.fillStyle = "rgba(255,255,255,0.7)";
-      ctx.font = "700 22px sans-serif"; 
-      ctx.fillText(d.typeName, W/2, H - 155);
-      
-      // Logo GymTrack (Sumbu Y menggunakan Min (-), Lebar/Tinggi disesuaikan 60 agar proporsional)
-      ctx.drawImage(logo, W/2 - 30, H - 135, 45, 45);
+      ctx.font = "700 22px 'Syne', sans-serif";
+      ctx.fillText(d.typeName, W / 2, H - 155);
 
-      // Teks "GYMTRACK" (Ditaruh tepat di bawah logo)
+      ctx.drawImage(logo, W / 2 - 30, H - 135, 45, 45);
+
       ctx.fillStyle = "rgba(255,255,255,0.7)";
-      ctx.font = "800 25px monospace";
-      ctx.fillText("GYMTRACK", W/2, H - 55);
+      ctx.font = "800 25px 'Syne', sans-serif";
+      ctx.fillText("GYMTRACK", W / 2, H - 55);
 
       ctx.textAlign = "left";
-
     } else if (style === 4) {
-      // STYLE 5: Hyper
       const grad = ctx.createLinearGradient(0, H * 0.6, 0, H);
       grad.addColorStop(0, "rgba(0,0,0,0)");
       grad.addColorStop(1, "rgba(0,0,0,0.9)");
@@ -608,38 +603,39 @@ function drawOverlay(source: HTMLVideoElement | HTMLImageElement) {
       roundRect(ctx, W - 280, 48, 240, 110, 20);
       ctx.fill();
       ctx.fillStyle = "#0f1117";
-      ctx.font = "bold 60px sans-serif";
+      ctx.font = "bold 60px 'Syne', sans-serif";
       ctx.textAlign = "right";
       ctx.fillText(d.hypScore + "%", W - 60, 110);
-      ctx.font = "700 18px sans-serif";
+      ctx.font = "700 18px 'Syne', sans-serif";
       ctx.fillText("HYPERTROPHY", W - 60, 140);
       ctx.textAlign = "left";
 
       ctx.fillStyle = "#fff";
-      ctx.font = "bold 33px sans-serif";
+      ctx.font = "bold 33px 'Syne', sans-serif";
       ctx.fillText(d.typeName, 48, H - 120);
-      
+
       ctx.fillStyle = "rgba(255,255,255,0.55)";
-      ctx.font = "500 24px sans-serif";
+      ctx.font = "500 24px 'Syne', sans-serif";
       ctx.fillText(`${d.totalSets} sets · ${d.maxWeight}kg max`, 48, H - 80);
-      
+
       ctx.drawImage(logo, 48, H - 56, 28, 28);
       ctx.fillStyle = "rgba(255,255,255,0.7)";
-      ctx.font = "500 20px sans-serif";
-      ctx.fillText(`GYMTRACK`, 86, H - 36);
+      ctx.font = "500 20px 'Syne', sans-serif";
+      ctx.fillText("GYMTRACK", 86, H - 36);
     }
 
     photoTaken.value = true;
     stopCamera();
   };
 
-  // Pastikan tetap berjalan walau logo gagal dimuat (fallback)
-  if (logo.complete) {
-    draw();
-  } else {
-    logo.onload = draw;
-    logo.onerror = draw;
-  }
+  document.fonts.ready.then(() => {
+    if (logo.complete) {
+      draw();
+    } else {
+      logo.onload = draw;
+      logo.onerror = draw;
+    }
+  });
 }
 
 function retake() {
@@ -669,6 +665,12 @@ onUnmounted(() => stopCamera());
   z-index: 300;
   display: flex;
   align-items: flex-end;
+}
+.modal,
+.modal * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 .modal {
   background: var(--bg2);
