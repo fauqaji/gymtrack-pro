@@ -183,7 +183,7 @@ const categories = [
   { id: "legs", label: "🦵 Legs" },
   { id: "arms", label: "💪 Arms" },
   { id: "core", label: "🎯 Core" },
-  { id: "daily", label: "📅 Daily" }, // Kategori Baru ditambahkan di sini
+  { id: "daily", label: "🗓️ Daily" }, // Kategori Baru ditambahkan di sini
 ];
 
 const filtered = computed(() => {
