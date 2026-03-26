@@ -11,7 +11,7 @@ export interface WorkoutExercise {
   id: string;
   name: string;
   muscle: string;
-  category: string;
+  category: string | string[];
   sets: WorkoutSet[];
 }
 
@@ -234,9 +234,11 @@ export const useWorkoutStore = defineStore("workout", {
       this.saveCurrentExercises();
     },
 
-    addExercise(exId: string) {
-      const ex = EXERCISES_DB.find((e) => e.id === exId);
-      if (!ex || this.currentExercises.find((e) => e.id === exId)) return false;
+    addExercise(exId: string | string[]) {
+      const id = Array.isArray(exId) ? exId[0] : exId;
+      if (!id) return false;
+      const ex = EXERCISES_DB.find((e) => e.id === id);
+      if (!ex || this.currentExercises.some((e) => e.id === id)) return false;
       this.currentExercises.push({
         id: ex.id,
         name: ex.name,

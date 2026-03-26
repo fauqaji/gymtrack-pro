@@ -224,6 +224,7 @@ import SvgIcon from "~/components/SvgIcon.vue";
 // ... kode yang sudah ada ...
 let audioCtx: AudioContext | null = null;
 let beepSource: AudioBufferSourceNode | null = null;
+const customSoundData = ref<string>("");
 
 const store = useWorkoutStore();
 const { toast } = useToast();
@@ -313,29 +314,52 @@ onUnmounted(() => {
 
 async function playBeep() {
   try {
-    // Buat AudioContext jika belum ada
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
-    // Pastikan AudioContext aktif (dalam keadaan running)
     if (audioCtx.state === 'suspended') {
       await audioCtx.resume();
     }
-    // Buat oscillator untuk nada 800 Hz
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    oscillator.type = 'sine';
-    oscillator.frequency.value = 800; // frekuensi beep
-    gainNode.gain.value = 0.3; // volume
-    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.2);
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    oscillator.start();
-    oscillator.stop(audioCtx.currentTime + 0.2);
+
+    if (customSoundData.value) {
+      // Mainkan custom sound (maks 6 detik)
+      const response = await fetch(customSoundData.value);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+      
+      const source = audioCtx.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(audioCtx.destination);
+      source.start();
+      const stopTime = Math.min(audioBuffer.duration, 6);
+      source.stop(audioCtx.currentTime + stopTime);
+    } else {
+      // Fallback oscillator (default)
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.value = 1000;
+      gainNode.gain.value = 0.9;
+      gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.2);
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.2);
+    }
   } catch (err) {
     console.warn('Beep error:', err);
   }
 }
+
+onMounted(() => {
+  // Pilih angka acak 5,6,7,8,9
+  const randomNum = Math.floor(Math.random() * 5) + 5;
+  emptyIconPath.value = `/dy-img(${randomNum}).svg`;
+
+  // Load custom sound dari localStorage
+  const stored = localStorage.getItem("gym_custom_sound");
+  if (stored) customSoundData.value = stored;
+});
 
 // Header
 const now = new Date();
