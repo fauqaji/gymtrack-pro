@@ -4,7 +4,9 @@
       <div class="handle"></div>
       <div class="sheet-header">
         <h3>{{ isCreatingDaily ? "Pilih Gerakan Paket" : "Pilih Latihan" }}</h3>
-        <button class="btn-close" @click="$emit('close')" @contextmenu.prevent>✕</button>
+        <button class="btn-close" @click="$emit('close')" @contextmenu.prevent>
+          ✕
+        </button>
       </div>
 
       <div class="cat-row">
@@ -15,6 +17,12 @@
           :class="{ active: activeCategory === c.id }"
           @click="activeCategory = c.id"
         >
+          <SvgIcon
+            v-if="c.icon"
+            :name="c.icon"
+            :size="22"
+            :color="activeCategory === c.id ? '#0f1117' : 'var(--text2)'"
+          />
           {{ c.label }}
         </button>
       </div>
@@ -83,7 +91,11 @@
               ✕
             </button>
           </div>
-          <div v-if="dailyExercises.length === 0" class="no-results" style="margin-top: 160px">
+          <div
+            v-if="dailyExercises.length === 0"
+            class="no-results"
+            style="margin-top: 160px"
+          >
             Pilih kategori (cth: Chest) untuk mulai memasukkan gerakan ke paket
             ini.
             <button class="btn-browse" @click="goToAll">
@@ -159,9 +171,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
 import { useWorkoutStore } from "~/stores/workout";
 import { EXERCISES_DB } from "~/composables/useData";
+import SvgIcon from "~/components/SvgIcon.vue";
 
 const emit = defineEmits(["close"]);
 const store = useWorkoutStore();
@@ -176,14 +189,14 @@ const dailyName = ref("");
 const dailyExercises = ref<string[]>([]);
 
 const categories = [
-  { id: "all", label: "Semua" },
-  { id: "chest", label: "🦍 Chest" },
-  { id: "back", label: "🔙 Back" },
-  { id: "shoulders", label: "🏋️ Shoulder" },
-  { id: "legs", label: "🦵 Legs" },
-  { id: "arms", label: "💪 Arms" },
-  { id: "core", label: "🎯 Core" },
-  { id: "daily", label: "🗓️ Daily" }, // Kategori Baru ditambahkan di sini
+  { id: "all", label: "Semua", icon: "" },
+  { id: "chest", label: "Chest", icon: "chest" },
+  { id: "back", label: "Back", icon: "back" },
+  { id: "shoulders", label: "Shoulder", icon: "shoulders" },
+  { id: "legs", label: "Legs", icon: "squat" },
+  { id: "arms", label: "Arms", icon: "arms" },
+  { id: "core", label: "Core", icon: "core" },
+  { id: "daily", label: "Daily", icon: "daily" },
 ];
 
 const filtered = computed(() => {
@@ -209,13 +222,31 @@ const filtered = computed(() => {
   return list;
 });
 
+function handlePopState() {
+  emit("close"); // Menutup modal saat tombol back HP ditekan
+}
+
+onMounted(() => {
+  // Sisipkan riwayat palsu saat modal terbuka
+  window.history.pushState({ modal: "addExercise" }, "");
+  window.addEventListener("popstate", handlePopState);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("popstate", handlePopState);
+  // Bersihkan riwayat palsu jika user menutup modal lewat tombol ✕ (bukan tombol back HP)
+  if (window.history.state && window.history.state.modal === "addExercise") {
+    window.history.back();
+  }
+});
+
 // Fungsi untuk langsung ke tab Semua saat klik tombol browse di paket daily
 function goToAll() {
-  activeCategory.value = 'all'
+  activeCategory.value = "all";
   nextTick(() => {
-    const catRow = document.querySelector('.cat-row')
-    catRow?.scrollTo({ left: 0, behavior: 'smooth' })
-  })
+    const catRow = document.querySelector(".cat-row");
+    catRow?.scrollTo({ left: 0, behavior: "smooth" });
+  });
 }
 
 // Helper mendapatkan nama latihan
@@ -348,15 +379,21 @@ h3 {
 }
 
 .cat-row {
-  display: flex;
+  display: grid;
+  grid-auto-columns: minmax(90px, 1fr);
+  grid-auto-flow: column;
   gap: 8px;
   overflow-x: auto;
   scrollbar-width: none;
   margin-bottom: 12px;
 }
+
 .cat-chip {
-  flex-shrink: 0;
-  padding: 6px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 0; /* hapus padding horizontal, lebar ditentukan grid */
   border-radius: 50px;
   font-size: 12px;
   font-weight: 500;
@@ -368,6 +405,7 @@ h3 {
   font-family: "DM Sans", sans-serif;
   white-space: nowrap;
 }
+
 .cat-chip.active {
   background: var(--accent);
   color: #0f1117;

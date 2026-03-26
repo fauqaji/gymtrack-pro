@@ -53,8 +53,18 @@
         class="dropdown-btn"
         @click="showTypeDropdown = !showTypeDropdown"
       >
-        <span v-if="store.selectedTypeId">
-          {{ WORKOUT_TYPES.find((t) => t.id === store.selectedTypeId)?.emoji }}
+        <span
+          v-if="store.selectedTypeId"
+          style="display: flex; align-items: center; gap: 8px"
+        >
+          <SvgIcon
+            :name="
+              WORKOUT_TYPES.find((t) => t.id === store.selectedTypeId)?.icon ??
+              ''
+            "
+            :size="20"
+            color="var(--text)"
+          />
           {{ WORKOUT_TYPES.find((t) => t.id === store.selectedTypeId)?.name }}
         </span>
         <span v-else class="placeholder">Pilih tipe workout...</span>
@@ -85,7 +95,7 @@
             showTypeDropdown = false;
           "
         >
-          <span class="di-emoji">{{ t.emoji }}</span>
+          <SvgIcon :name="t.icon" :size="36" color="var(--text2)" />
           <span class="di-info">
             <span class="di-name">{{ t.name }}</span>
             <span class="di-desc">{{ t.desc }}</span>
@@ -114,7 +124,7 @@
         class="type-card"
         @click="selectCustomTemplate(tpl)"
       >
-        <span class="type-emoji">🗓️</span>
+        <SvgIcon name="daily" :size="22" />
         <span class="type-name">{{ tpl.name }}</span>
         <span class="type-desc">{{ tpl.suggestions.length }} Latihan</span>
       </div>
@@ -164,7 +174,12 @@
 
     <!-- Empty State -->
     <div v-if="store.currentExercises.length === 0" class="empty-state">
-      <div class="empty-icon">🏋️</div>
+      <img
+        v-if="emptyIconPath"
+        :src="emptyIconPath"
+        class="empty-icon"
+        alt="Belum ada latihan"
+      />
       <h3>Belum ada latihan</h3>
       <p>Pilih tipe workout di atas atau tambah latihan manual</p>
     </div>
@@ -209,6 +224,7 @@ import { useWorkoutStore } from "~/stores/workout";
 import { DAYS_ID, WORKOUT_TYPES, MONTHS_ID } from "~/composables/useData";
 import { useAI } from "~/composables/useAI";
 import type { WorkoutSession } from "~/stores/workout";
+import SvgIcon from "~/components/SvgIcon.vue";
 
 const store = useWorkoutStore();
 const { toast } = useToast();
@@ -292,6 +308,14 @@ const initials = computed(() => {
     .join("")
     .substring(0, 2)
     .toUpperCase();
+});
+
+const emptyIconPath = ref('');
+
+onMounted(() => {
+  // Pilih angka acak 5,6,7,8,9
+  const randomNum = Math.floor(Math.random() * 5) + 5;
+  emptyIconPath.value = `/dy-img(${randomNum}).svg`;
 });
 
 function selectType(t: (typeof WORKOUT_TYPES)[0]) {
@@ -528,9 +552,12 @@ async function handleFinish() {
   color: var(--text2);
 }
 .empty-icon {
-  font-size: 44px;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;  /* agar gambar tidak terdistorsi */
   margin-bottom: 10px;
-  opacity: 0.4;
+  opacity: 0.6;         
+  filter: brightness(0) invert(1);
 }
 .empty-state h3 {
   font-family: "Syne", sans-serif;
