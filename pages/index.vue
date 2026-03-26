@@ -537,6 +537,7 @@ async function handleFinish() {
   font-size: 13px;
   font-weight: 700;
   color: var(--text);
+  margin-top: 2px;
 }
 .type-desc {
   font-size: 11px;
