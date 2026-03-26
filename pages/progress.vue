@@ -243,7 +243,7 @@ watch(
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 100px; /* sesuaikan, lebih kecil dari sebelumnya */
-  max-width: 120px;
+  max-width: 100px;
   flex-shrink: 1;
   font-size: 12px;
   color: var(--text2);
