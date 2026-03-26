@@ -51,21 +51,15 @@
     <div class="dropdown-wrap">
       <button
         class="dropdown-btn"
+        :class="{ 'active-btn': store.selectedTypeId }"
         @click="showTypeDropdown = !showTypeDropdown"
       >
         <span
           v-if="store.selectedTypeId"
           style="display: flex; align-items: center; gap: 8px"
         >
-          <SvgIcon
-            :name="
-              WORKOUT_TYPES.find((t) => t.id === store.selectedTypeId)?.icon ??
-              ''
-            "
-            :size="20"
-            color="var(--text)"
-          />
-          {{ WORKOUT_TYPES.find((t) => t.id === store.selectedTypeId)?.name }}
+          <SvgIcon :name="selectedTypeIcon" :size="20" color="var(--text)" />
+          {{ selectedTypeName }}
         </span>
         <span v-else class="placeholder">Pilih tipe workout...</span>
         <svg
@@ -122,6 +116,7 @@
         v-for="tpl in store.customTemplates"
         :key="tpl.id"
         class="type-card"
+        :class="{ active: store.selectedTypeId === tpl.id }"
         @click="selectCustomTemplate(tpl)"
       >
         <SvgIcon name="daily" :size="22" />
@@ -243,7 +238,11 @@ let timerInt: ReturnType<typeof setInterval> | null = null;
 const showTypeDropdown = ref(false);
 
 function selectCustomTemplate(template: any) {
+  // Hapus semua latihan yang sudah ada
+  store.clearExercises();
+  // Set tipe workout ke ID daily template
   store.setSelectedType(template.id);
+  // Muat latihan dari template
   store.autoLoadExercises(template.suggestions);
   nextTick(() => {
     document
@@ -310,7 +309,7 @@ const initials = computed(() => {
     .toUpperCase();
 });
 
-const emptyIconPath = ref('');
+const emptyIconPath = ref("");
 
 onMounted(() => {
   // Pilih angka acak 5,6,7,8,9
@@ -319,6 +318,7 @@ onMounted(() => {
 });
 
 function selectType(t: (typeof WORKOUT_TYPES)[0]) {
+  store.clearExercises(); // tambahkan ini
   store.setSelectedType(t.id);
   store.autoLoadExercises(t.suggestions);
 }
@@ -330,6 +330,24 @@ function clearAll() {
   }
 }
 
+const selectedTypeName = computed(() => {
+  const id = store.selectedTypeId;
+  if (!id) return "";
+  const found = WORKOUT_TYPES.find((t) => t.id === id);
+  if (found) return found.name;
+  const custom = store.customTemplates.find((t) => t.id === id);
+  if (custom) return custom.name;
+  return id; // fallback
+});
+
+const selectedTypeIcon = computed(() => {
+  const id = store.selectedTypeId;
+  if (!id) return "";
+  const found = WORKOUT_TYPES.find((t) => t.id === id);
+  if (found) return found.icon;
+  return "daily"; // icon default untuk custom daily
+});
+
 async function handleFinish() {
   if (store.currentExercises.length === 0) {
     toast("Tambahkan latihan dulu!", "");
@@ -338,9 +356,8 @@ async function handleFinish() {
   finishing.value = true;
   store.startSession();
 
-  const selectedType = WORKOUT_TYPES.find((t) => t.id === store.selectedTypeId);
-  const typeName = selectedType?.name ?? "Custom Workout";
   const dayName = DAYS_ID[store.selectedDay - 1];
+  const typeName = selectedTypeName.value || "Custom Workout"; // gunakan nama yang sudah di-resolve
 
   try {
     const aiText = await analyzeWorkout(
@@ -516,6 +533,10 @@ async function handleFinish() {
   margin-bottom: 4px;
 }
 .type-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
   font-family: "Syne", sans-serif;
   font-size: 13px;
   font-weight: 700;
@@ -554,9 +575,9 @@ async function handleFinish() {
 .empty-icon {
   width: 44px;
   height: 44px;
-  object-fit: contain;  /* agar gambar tidak terdistorsi */
+  object-fit: contain; /* agar gambar tidak terdistorsi */
   margin-bottom: 10px;
-  opacity: 0.6;         
+  opacity: 0.6;
   filter: brightness(0) invert(1);
 }
 .empty-state h3 {
@@ -686,6 +707,10 @@ async function handleFinish() {
 }
 .dropdown-item.active .di-name {
   color: var(--accent);
+}
+.dropdown-btn.active-btn {
+  border-color: var(--accent);
+  background: rgba(200, 241, 53, 0.07); /* optional, memberi efek latar seperti daily card */
 }
 .di-emoji {
   font-size: 20px;

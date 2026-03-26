@@ -72,6 +72,8 @@
           class="search-inp"
           placeholder="Hari & Jenis (cth: Senin - Dada & Trisep)"
           type="text"
+          maxlength="32"
+          @input="dailyName = dailyName.trimStart()"
         />
 
         <div class="selected-header">
@@ -267,9 +269,14 @@ function cancelCreateDaily() {
 }
 
 function saveDaily() {
-  if (!dailyName.value || dailyExercises.value.length === 0) return;
-  store.saveCustomTemplate(dailyName.value, dailyExercises.value);
-  toast(`Paket ${dailyName.value} tersimpan!`, "success");
+  let name = dailyName.value.trim();
+  if (!name || dailyExercises.value.length === 0) return;
+  if (name.length > 32) {
+    name = name.slice(0, 32);
+    toast("Nama terlalu panjang, dipotong menjadi 24 karakter", "accent");
+  }
+  store.saveCustomTemplate(name, dailyExercises.value);
+  toast(`Paket ${name} tersimpan!`, "success");
   isCreatingDaily.value = false;
 }
 
@@ -448,6 +455,10 @@ h3 {
   opacity: 0.8;
 }
 .er-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
   font-size: 14px;
   font-weight: 500;
   color: var(--text);
