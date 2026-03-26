@@ -221,6 +221,10 @@ import { useAI } from "~/composables/useAI";
 import type { WorkoutSession } from "~/stores/workout";
 import SvgIcon from "~/components/SvgIcon.vue";
 
+// ... kode yang sudah ada ...
+let audioCtx: AudioContext | null = null;
+let beepSource: AudioBufferSourceNode | null = null;
+
 const store = useWorkoutStore();
 const { toast } = useToast();
 const { analyzeWorkout } = useAI();
@@ -264,12 +268,24 @@ onUnmounted(() => document.removeEventListener("click", handleOutsideClick));
 
 function toggleTimer() {
   if (timerRunning.value) {
+    // Hentikan timer
     clearInterval(timerInt!);
     timerRunning.value = false;
     timerSeconds.value = 0;
     timerDisplay.value = "Rest";
+    // Tutup AudioContext untuk hemat resource (opsional)
+    if (audioCtx) {
+      audioCtx.close();
+      audioCtx = null;
+    }
   } else {
+    // Mulai timer
     timerRunning.value = true;
+    // Buat AudioContext segera untuk memastikan user gesture
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioCtx.resume(); // resume karena dipanggil dalam user click
+    }
     timerInt = setInterval(() => {
       timerSeconds.value++;
       const m = Math.floor(timerSeconds.value / 60)
@@ -277,6 +293,12 @@ function toggleTimer() {
         .padStart(2, "0");
       const s = (timerSeconds.value % 60).toString().padStart(2, "0");
       timerDisplay.value = `${m}:${s}`;
+      
+      // Beep setiap 1 menit (detik ke 60, 120, 180)
+      if (timerSeconds.value % 60 === 0 && timerSeconds.value > 0) {
+        playBeep();
+      }
+      
       if (timerSeconds.value >= 180) {
         toast("Rest 3 menit selesai! Lanjut set!", "success");
         toggleTimer();
@@ -288,6 +310,32 @@ function toggleTimer() {
 onUnmounted(() => {
   if (timerInt) clearInterval(timerInt);
 });
+
+async function playBeep() {
+  try {
+    // Buat AudioContext jika belum ada
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    // Pastikan AudioContext aktif (dalam keadaan running)
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume();
+    }
+    // Buat oscillator untuk nada 800 Hz
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    oscillator.type = 'sine';
+    oscillator.frequency.value = 800; // frekuensi beep
+    gainNode.gain.value = 0.3; // volume
+    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.2);
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + 0.2);
+  } catch (err) {
+    console.warn('Beep error:', err);
+  }
+}
 
 // Header
 const now = new Date();
