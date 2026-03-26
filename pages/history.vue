@@ -205,10 +205,17 @@ function deleteSession(id: number) {
   align-items: flex-start;
   margin-bottom: 8px;
 }
+.sc-header > div:first-child {
+  min-width: 0; /* agar anak bisa terpotong */
+}
 .sc-type {
   font-family: "Syne", sans-serif;
   font-size: 15px;
   font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px; /* opsional, sesuaikan */
 }
 .sc-date {
   font-size: 12px;
@@ -280,6 +287,13 @@ function deleteSession(id: number) {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 14px;
+}
+/* Untuk tampilan nama tipe di modal detail */
+.detail-header h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 270px;
 }
 .detail-actions {
   display: flex;
@@ -369,10 +383,16 @@ h3 {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+  min-width: 0;
 }
 .exs-name {
   font-size: 14px;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 }
 .exs-muscle {
   font-size: 10px;
@@ -380,6 +400,8 @@ h3 {
   text-transform: uppercase;
   letter-spacing: 0.07em;
   font-weight: 600;
+  flex-shrink: 0;
+  margin-left: 8px;
 }
 .exs-set {
   display: grid;
