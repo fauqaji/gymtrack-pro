@@ -533,10 +533,6 @@ async function handleFinish() {
   margin-bottom: 4px;
 }
 .type-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 100%;
   font-family: "Syne", sans-serif;
   font-size: 13px;
   font-weight: 700;
