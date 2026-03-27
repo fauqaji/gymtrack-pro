@@ -377,6 +377,31 @@ const fullStats = computed(() =>
 );
 
 const topPRs = computed(() => {
+  // Kalau dataSource = 'current', hitung PR langsung dari sesi yang sedang berjalan
+  if (dataSource.value === 'current' && store.currentExercises.length > 0) {
+    return store.currentExercises.map((ex) => {
+      const bestSet = ex.sets.reduce(
+        (best, s) =>
+          (s.weight || 0) > (best.weight || 0) ? s : best,
+        ex.sets[0] ?? { weight: 0, reps: 0 }
+      );
+      const volume = ex.sets.reduce(
+        (a, s) => a + (s.reps || 0) * (s.weight || 0),
+        0
+      );
+      return {
+        name: ex.name,
+        muscle: ex.muscle ?? null,
+        volume,
+        maxWeight: bestSet.weight ?? 0,
+        reps: bestSet.reps ?? 0,
+      };
+    })
+    .sort((a, b) => b.volume - a.volume)
+    .slice(0, 3);
+  }
+
+  // Kalau dataSource = 'last', tetap pakai store.prList (data PR global)
   return store.prList.slice(0, 3).map((pr) => ({
     name: pr.name,
     muscle: pr.muscle,
@@ -679,8 +704,8 @@ function drawOverlay(source: HTMLVideoElement | HTMLImageElement) {
         const pr = prList[0];
 
         // Lebar card dikurangi 350, X diatur 175 agar posisinya 100% presisi di tengah
-        const cardWidth = W - 350;
-        const cardX = 175;
+        const cardWidth = W - 550;
+        const cardX = 275;
         const itemHeight = 110;
 
         const titleY = H - 120;
