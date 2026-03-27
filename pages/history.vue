@@ -13,7 +13,7 @@
     </div>
 
     <div
-      v-for="session in store.history"
+      v-for="session in store.history.slice(0, visibleCount)"
       :key="session.id"
       class="session-card"
       @click="selected = session"
@@ -45,7 +45,14 @@
         <span class="sc-day">{{ session.day }}</span>
       </div>
     </div>
-
+    <!-- Trigger infinite scroll -->
+    <div v-if="hasMore" ref="loadTrigger" class="load-trigger">
+      <div v-if="loadingMore" class="loading-spinner">
+        <div class="spinner"></div>
+        <span>Memuat lebih banyak...</span>
+      </div>
+      <div v-else class="load-hint">⬇️ Scroll untuk lebih banyak ⬇️</div>
+    </div>
     <!-- Detail Modal -->
     <div v-if="selected" class="overlay" @click.self="selected = null">
       <div class="sheet">
@@ -119,6 +126,26 @@ const store = useWorkoutStore();
 const { toast } = useToast();
 const selected = ref<WorkoutSession | null>(null);
 
+const visibleCount = ref(10); // jumlah sesi yang ditampilkan
+const loadTrigger = ref<HTMLElement | null>(null);
+const loadingMore = ref(false);
+let observer: IntersectionObserver | null = null;
+
+const hasMore = computed(() => visibleCount.value < store.history.length);
+
+function loadMore() {
+  if (loadingMore.value || !hasMore.value) return;
+  loadingMore.value = true;
+  // Simulasi delay agar UI terasa halus
+  setTimeout(() => {
+    visibleCount.value = Math.min(
+      visibleCount.value + 10,
+      store.history.length,
+    );
+    loadingMore.value = false;
+  }, 300);
+}
+
 function hypBadgeClass(score: number) {
   return score >= 80 ? "green" : score >= 55 ? "orange" : "red";
 }
@@ -138,6 +165,30 @@ function deleteSession(id: number) {
   selected.value = null;
   toast("Sesi dihapus", "");
 }
+
+onMounted(() => {
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && hasMore.value) {
+        loadMore();
+      }
+    },
+    { threshold: 0.1, rootMargin: "0px 0px 100px 0px" }, // trigger lebih awal
+  );
+  if (loadTrigger.value) observer.observe(loadTrigger.value);
+});
+
+onUnmounted(() => {
+  if (observer) observer.disconnect();
+});
+
+// Jika history berubah (misal hapus sesi), sesuaikan visibleCount
+watch(
+  () => store.history.length,
+  (newLen) => {
+    if (visibleCount.value > newLen) visibleCount.value = newLen;
+  },
+);
 </script>
 
 <style scoped>
@@ -452,5 +503,32 @@ h3 {
   font-weight: 800;
   cursor: pointer;
   margin-top: 8px;
+}
+.load-trigger {
+  text-align: center;
+  padding: 16px;
+  color: var(--text3);
+  font-size: 13px;
+}
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.load-hint {
+  opacity: 0.6;
+  font-size: 12px;
 }
 </style>
