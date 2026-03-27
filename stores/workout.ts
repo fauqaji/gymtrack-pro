@@ -55,6 +55,13 @@ export interface CustomTemplate {
   createdAt: string;
 }
 
+function getLocalDateStr(date: Date): string {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function loadLS<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
   try {
@@ -93,19 +100,38 @@ export const useWorkoutStore = defineStore("workout", {
 
     streakDays(): number {
       if (this.history.length === 0) return 0;
-      const dates = [...new Set(this.history.map((h) => h.date.split("T")[0]))]
+
+      // Ambil semua tanggal latihan unik dalam format lokal
+      const dates = [
+        ...new Set(
+          this.history.map((h) => {
+            const d = new Date(h.date);
+            return getLocalDateStr(d);
+          }),
+        ),
+      ]
         .sort()
-        .reverse();
-      let streak = 0;
-      const today = new Date().toISOString().split("T")[0];
-      let d = new Date(today);
-      for (const date of dates) {
-        const check = d.toISOString().split("T")[0];
-        if (date === check) {
-          streak++;
-          d.setDate(d.getDate() - 1);
-        } else if (date < check) break;
+        .reverse(); // urut dari terbaru ke terlama
+
+      if (dates.length === 0) return 0;
+
+      let streak = 1; // minimal 1 jika ada latihan
+      let prevDate = new Date(dates[0]);
+
+      for (let i = 1; i < dates.length; i++) {
+        const currDate = new Date(dates[i]);
+        const diffDays = Math.floor(
+          (prevDate.getTime() - currDate.getTime()) / (1000 * 60 * 60 * 24),
+        );
+
+        if (diffDays <= 7) {
+          streak++; // masih dalam rentang toleransi
+          prevDate = currDate;
+        } else {
+          break; // jeda lebih dari 7 hari, streak terputus
+        }
       }
+
       return streak;
     },
 
@@ -321,14 +347,16 @@ export const useWorkoutStore = defineStore("workout", {
 
       // 👇 BLOK KODE BARU: Mencegat dan mencari nama paket custom 👇
       let finalTypeName = typeName;
-      if (finalTypeName === 'Custom Workout' || !finalTypeName) {
-        const customTpl = this.customTemplates.find(t => t.id === this.selectedTypeId || t.name === this.selectedTypeId);
+      if (finalTypeName === "Custom Workout" || !finalTypeName) {
+        const customTpl = this.customTemplates.find(
+          (t) => t.id === this.selectedTypeId || t.name === this.selectedTypeId,
+        );
         if (customTpl) {
           finalTypeName = customTpl.name; // Ambil dari daftar template
         } else if (this.selectedTypeId) {
           finalTypeName = this.selectedTypeId; // Ambil langsung jika isinya string nama
         } else {
-          finalTypeName = 'Workout'; // Fallback jika tidak ada nama yang valid
+          finalTypeName = "Workout"; // Fallback jika tidak ada nama yang valid
         }
       }
       // 👆 SELESAI BLOK KODE BARU 👆
