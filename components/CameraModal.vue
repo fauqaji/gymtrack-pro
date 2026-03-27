@@ -213,6 +213,39 @@
               </div>
             </div>
           </template>
+          <template v-else-if="activeOverlay === 5">
+            <div class="ov ov-pr-single">
+              <div class="ov-pr-single-card" v-if="topPRs.length > 0">
+                <div class="ov-pr-single-left">
+                  <div class="ov-pr-single-name">{{ topPRs[0].name }}</div>
+                  <div class="ov-pr-single-muscle">
+                    {{ topPRs[0].muscle || "OTOT" }}
+                  </div>
+                </div>
+                <div class="ov-pr-single-right">
+                  <div class="ov-pr-single-vol">
+                    {{ Math.round(topPRs[0].volume) }}<span> kg vol</span>
+                  </div>
+                  <div class="ov-pr-single-max">
+                    Max {{ topPRs[0].maxWeight }} kg
+                  </div>
+                  <div class="ov-pr-single-best">
+                    Best: {{ topPRs[0].maxWeight }}kg × {{ topPRs[0].reps }}
+                  </div>
+                </div>
+              </div>
+              <div v-else class="ov-pr-single-empty">
+                Belum ada PR. Selesaikan workout dulu!
+              </div>
+              <div class="ov-pr-single-footer">
+                <div class="ov-pr-single-title">PERSONAL RECORD</div>
+                <div class="ov-pr-single-logo">
+                  <img src="/icon.png" class="ov-icon" alt="GT" />
+                  <span>GYMTRACK</span>
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
 
         <div class="overlay-dots" v-if="!photoTaken">
@@ -272,6 +305,7 @@ const overlayStyles = [
   { icon: "◱" },
   { icon: "—" },
   { icon: "◈" },
+  { icon: "🏆" },
 ];
 
 const sessionData = computed(() => {
@@ -341,6 +375,16 @@ const fullStats = computed(() =>
       ]
     : [],
 );
+
+const topPRs = computed(() => {
+  return store.prList.slice(0, 3).map((pr) => ({
+    name: pr.name,
+    muscle: pr.muscle,
+    volume: pr.volume,
+    maxWeight: pr.maxWeight,
+    reps: pr.bestSet.reps,
+  }));
+});
 
 function formatVol(v: number) {
   return v >= 1000 ? (v / 1000).toFixed(1) + "t" : v + "kg";
@@ -622,6 +666,107 @@ function drawOverlay(source: HTMLVideoElement | HTMLImageElement) {
       ctx.fillStyle = "rgba(255,255,255,0.7)";
       ctx.font = "500 20px 'Syne', sans-serif";
       ctx.fillText("GYMTRACK", 86, H - 36);
+    } else if (style === 5) {
+      const prList = topPRs.value;
+
+      if (prList.length === 0) {
+        ctx.font = "18px 'DM Sans', sans-serif";
+        ctx.fillStyle = "rgba(255,255,255,0.6)";
+        ctx.textAlign = "center";
+        ctx.fillText("Belum ada PR. Selesaikan workout dulu!", W / 2, H / 2);
+      } else {
+        // --- AMBIL HANYA 1 DATA PR TERATAS ---
+        const pr = prList[0];
+
+        // Lebar card dikurangi 350, X diatur 175 agar posisinya 100% presisi di tengah
+        const cardWidth = W - 350;
+        const cardX = 175;
+        const itemHeight = 110;
+
+        const titleY = H - 120;
+        const logoY = H - 90;
+
+        // Posisikan 1 card ini tepat di atas judul
+        const y = titleY - itemHeight - 40;
+
+        // --- 1. BACKGROUND CARD ---
+        ctx.fillStyle = "rgba(30, 31, 42, 0.85)"; // Mirip warna var(--bg2)
+        roundRect(ctx, cardX, y, cardWidth, itemHeight, 16);
+        ctx.fill();
+
+        // --- 2. BORDER CARD ---
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"; // Border halus
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, cardX, y, cardWidth, itemHeight, 16);
+        ctx.stroke();
+
+        // Padding di dalam card
+        const leftX = cardX + 24;
+        const rightX = cardX + cardWidth - 24;
+
+        // ==========================================
+        // --- KOLOM KIRI (NAMA LATIHAN & OTOT) ---
+        // ==========================================
+        ctx.textAlign = "left";
+
+        // Nama Latihan (Putih, Bold, Besar)
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 24px 'Syne', sans-serif";
+        ctx.fillText(pr.name, leftX, y + 42);
+
+        // Nama Otot (Warna Hijau Accent, Uppercase)
+        ctx.fillStyle = "#C8F135";
+        ctx.font = "bold 15px 'DM Sans', sans-serif";
+        const muscleName = pr.muscle ? pr.muscle.toUpperCase() : "OTOT";
+        ctx.fillText(muscleName, leftX, y + 70);
+
+        // ==========================================
+        // --- KOLOM KANAN (STATISTIK VOLUME & REPS) ---
+        // ==========================================
+        ctx.textAlign = "right";
+
+        // 1. Label "kg vol" (Warna Abu, ukuran kecil)
+        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.font = "500 15px 'DM Sans', sans-serif";
+        ctx.fillText(" kg vol", rightX, y + 42);
+
+        // Ukur lebar " kg vol" agar angka Volume bisa digeser tepat di sebelahnya
+        const kgWidth = ctx.measureText(" kg vol").width;
+
+        // 2. Angka Volume (Warna Hijau Accent, Bold, Besar)
+        ctx.fillStyle = "#C8F135";
+        ctx.font = "bold 30px 'Syne', sans-serif";
+        ctx.fillText(String(Math.round(pr.volume)), rightX - kgWidth, y + 44);
+
+        // 3. Beban Max Weight (Warna Putih sedikit transparan)
+        ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+        ctx.font = "500 16px 'DM Sans', sans-serif";
+        ctx.fillText(`Max ${pr.maxWeight} kg`, rightX, y + 70);
+
+        // 4. Best Set (Reps) (Warna Abu di paling bawah)
+        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+        ctx.font = "500 14px 'DM Sans', sans-serif";
+        ctx.fillText(`Best: ${pr.maxWeight}kg × ${pr.reps}`, rightX, y + 92);
+
+        // ==========================================
+        // --- TITLE BAWAH ---
+        // ==========================================
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#C8F135";
+        ctx.font = "bold 30px 'Syne', sans-serif";
+        ctx.fillText("PERSONAL RECORD", W / 2, titleY);
+
+        // ==========================================
+        // --- LOGO & TEXT GYMTRACK ---
+        // ==========================================
+        const logoSize = 44;
+        const logoX = W / 2 - logoSize / 2;
+        ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+
+        ctx.fillStyle = "rgba(255,255,255,0.6)";
+        ctx.font = "bold 20px 'Syne', sans-serif";
+        ctx.fillText("GYMTRACK", W / 2, logoY + logoSize + 26);
+      }
     }
 
     photoTaken.value = true;
@@ -1229,5 +1374,188 @@ onUnmounted(() => stopCamera());
   background: var(--accent);
   border: none;
   color: #0f1117;
+}
+.ov-pr {
+  background: linear-gradient(135deg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.ov-pr-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.ov-pr-title {
+  font-family: "Syne", sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+}
+.ov-pr-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ov-pr-item {
+  background: rgba(18, 18, 18, 0.274);
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+.ov-pr-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #fff;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ov-pr-stats {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  gap: 6px;
+}
+.ov-pr-divider {
+  opacity: 0.5;
+}
+.ov-pr-empty {
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 20px;
+}
+.ov-pr-footer {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.08em;
+}
+/* Style 5: Single PR */
+.ov-pr-single {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 20px;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.85) 100%
+  );
+  border-radius: 16px;
+}
+
+.ov-pr-single-card {
+  background: rgba(30, 31, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  backdrop-filter: blur(4px);
+}
+
+.ov-pr-single-left {
+  flex: 1;
+}
+
+.ov-pr-single-name {
+  font-family: "Syne", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.ov-pr-single-muscle {
+  font-family: "DM Sans", sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  color: #c8f135;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ov-pr-single-right {
+  text-align: right;
+}
+
+.ov-pr-single-vol {
+  font-family: "Syne", sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: #c8f135;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.ov-pr-single-vol span {
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.ov-pr-single-max {
+  font-family: "DM Sans", sans-serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 2px;
+}
+
+.ov-pr-single-best {
+  font-family: "DM Sans", sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.ov-pr-single-empty {
+  text-align: center;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 30px;
+}
+
+.ov-pr-single-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.ov-pr-single-title {
+  font-family: "Syne", sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: #c8f135;
+  letter-spacing: 0.05em;
+}
+
+.ov-pr-single-logo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ov-pr-single-logo span {
+  font-family: "Syne", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.1em;
+}
+.ov-pr-single-logo img {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: contain;
 }
 </style>
