@@ -150,7 +150,7 @@ export const useWorkoutStore = defineStore("workout", {
 
     prList(): PersonalRecord[] {
       return Object.values(this.personalRecords).sort(
-        (a, b) => b.volume - a.volume,
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
       );
     },
 
