@@ -280,6 +280,20 @@ export const EXERCISES_DB = [
     category: "legs",
     tips: "Stance lebar, lebih activate glute daripada conventional.",
   },
+  {
+    id: "hip_abductor",
+    name: "Hip Abductor Machine",
+    muscle: "Glute Medius / Hip Abductors",
+    category: "legs",
+    tips: "Duduk tegak, lutut di luar, tekan perlahan. Fokus pada kontrol dan squeeze di puncak.",
+  },
+  {
+    id: "hip_adductor",
+    name: "Hip Adductor Machine",
+    muscle: "Adductors (Inner Thigh)",
+    category: "legs",
+    tips: "Duduk dengan paha dalam di bantalan, tekan ke dalam. Hindari gerakan terlalu cepat, tahan 1 detik di titik kontraksi.",
+  },
 
   // ARMS
   {
@@ -440,14 +454,14 @@ export const WORKOUT_TYPES = [
   { id: "chest",    name: "Chest Day",    icon: "chest",     desc: "Dada & Trisep",            suggestions: ["bench_flat","chest_press_machine","bench_incline","cable_fly","dumbbell_fly","tricep_pushdown","skull_crusher"] },
   { id: "back",     name: "Back Day",     icon: "back",      desc: "Punggung & Bisep",          suggestions: ["deadlift","pullup","barbell_row","lat_pulldown","cable_row","face_pull","barbell_curl","seated_row_machine"] },
   { id: "shoulders",name: "Shoulder Day", icon: "shoulders", desc: "Bahu & Trapezius",          suggestions: ["ohp","db_ohp","lateral_raise","shoulder_press_machine","rear_delt_fly","face_pull","shrug"] },
-  { id: "legs",     name: "Leg Day",      icon: "squat",      desc: "Quads, Hamstring, Glutes",  suggestions: ["squat","rdl","leg_press","leg_curl","leg_extension","calf_raise","hip_thrust"] },
+  { id: "legs",     name: "Leg Day",      icon: "squat",      desc: "Quads, Hamstring, Glutes",  suggestions: ["squat","rdl","leg_press","leg_curl","leg_extension","calf_raise","hip_thrust", ,"hip_abductor","hip_adductor"] },
   { id: "arms",     name: "Arms Day",     icon: "arms",      desc: "Bisep & Trisep",            suggestions: ["barbell_curl","db_curl","hammer_curl","crossbody_curl","incline_curl","tricep_pushdown","skull_crusher","reverse_grip_pushdown","overhead_tri"] },
   { id: "push",     name: "Push Day",     icon: "push",      desc: "Chest + Shoulder + Tri",    suggestions: ["bench_flat","chest_press_machine","shoulder_press_machine","bench_incline","ohp","lateral_raise","tricep_pushdown","skull_crusher","reverse_grip_pushdown"] },
   { id: "pull",     name: "Pull Day",     icon: "pull",      desc: "Back + Bicep",              suggestions: ["pullup","barbell_row","lat_pulldown","cable_row","face_pull","barbell_curl","hammer_curl","seated_row_machine"] },
-  { id: "legs_ppl", name: "Legs (PPL)",   icon: "legs_ppl",      desc: "Leg Day untuk PPL",         suggestions: ["squat","rdl","leg_press","leg_curl","bulgarian","calf_raise"] },
+  { id: "legs_ppl", name: "Legs (PPL)",   icon: "legs_ppl",      desc: "Leg Day untuk PPL",         suggestions: ["squat","rdl","leg_press","leg_curl","bulgarian","calf_raise","hip_abductor","hip_adductor"] },
   { id: "upper",    name: "Upper Body",   icon: "upper",     desc: "Chest + Back + Shoulders",  suggestions: ["bench_flat","barbell_row","ohp","pullup","lateral_raise","face_pull"] },
-  { id: "lower",    name: "Lower Body",   icon: "lower",     desc: "Legs + Core",               suggestions: ["squat","rdl","leg_press","hip_thrust","calf_raise","plank","cable_crunch"] },
-  { id: "full",     name: "Full Body",    icon: "full",      desc: "Semua Grup Otot",           suggestions: ["squat","bench_flat","shoulder_press_machine","barbell_row","ohp","rdl","barbell_curl"] },
+  { id: "lower",    name: "Lower Body",   icon: "lower",     desc: "Legs + Core",               suggestions: ["squat","rdl","leg_press","hip_thrust","calf_raise","plank","cable_crunch","hip_abductor","hip_adductor"] },
+  { id: "full",     name: "Full Body",    icon: "full",      desc: "Semua Grup Otot",           suggestions: ["squat","bench_flat","shoulder_press_machine","barbell_row","ohp","rdl","barbell_curl","hip_abductor","hip_adductor"] },
   { id: "core",     name: "Core Day",     icon: "core",      desc: "Abs & Core Stability",      suggestions: ["plank","cable_crunch","leg_raise","ab_wheel","russian_twist","dead_bug","pallof_press"] },
 ]
 
