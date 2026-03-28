@@ -51,7 +51,7 @@ export default defineNuxtConfig({
     workbox: {
       navigateFallback: "/", // ← balik ke "/"
       navigateFallbackAllowlist: [/^\/(?!api\/).*/],
-      globPatterns: ["**/*.{js,css,png,svg,ico}"],
+      globPatterns: ["**/*.{js,css,png,svg,ico}", "index.vue", "*/index.vue"],
       cleanupOutdatedCaches: true,
       cacheId: "gymtrack-v8",
       skipWaiting: true,
