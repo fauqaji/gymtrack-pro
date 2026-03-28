@@ -50,8 +50,7 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
-      navigateFallback: "/offline",
-      navigateFallbackDenylist: [/^\/_nuxt\//, /\/api\//],
+      navigateFallback: "/",
       globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
       cleanupOutdatedCaches: true,
       // 👇 2. TAMBAHKAN INI UNTUK MENYIMPAN FONT GOOGLE SAAT OFFLINE 👇
