@@ -1,5 +1,8 @@
 // nuxt.config.ts
 export default defineNuxtConfig({
+  // 👇 1. MATIKAN SSR AGAR MENJADI APLIKASI OFFLINE (SPA) 👇
+  ssr: false,
+
   devtools: { enabled: false },
 
   modules: [
@@ -48,8 +51,29 @@ export default defineNuxtConfig({
     },
     workbox: {
       navigateFallback: "/",
-      globPatterns: ["**/*.{js,css,html,png,svg}"],
+      globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
       cleanupOutdatedCaches: true,
+      // 👇 2. TAMBAHKAN INI UNTUK MENYIMPAN FONT GOOGLE SAAT OFFLINE 👇
+      runtimeCaching: [
+        {
+          urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+          handler: "CacheFirst",
+          options: {
+            cacheName: "google-fonts-cache",
+            expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 }, // Cache 1 tahun
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+        {
+          urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+          handler: "CacheFirst",
+          options: {
+            cacheName: "gstatic-fonts-cache",
+            expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 }, // Cache 1 tahun
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+      ],
     },
     client: {
       installPrompt: true,
