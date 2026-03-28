@@ -50,6 +50,7 @@ export default defineNuxtConfig({
     },
     workbox: {
       navigateFallback: "/",
+      navigateFallbackAllowlist: [/^\/(?!api\/).*/],
       globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
       cleanupOutdatedCaches: true,
       cacheId: "gymtrack-v2",
