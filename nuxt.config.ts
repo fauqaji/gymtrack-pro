@@ -53,7 +53,10 @@ export default defineNuxtConfig({
       navigateFallback: "/",
       globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
       cleanupOutdatedCaches: true,
-      // 👇 2. TAMBAHKAN INI UNTUK MENYIMPAN FONT GOOGLE SAAT OFFLINE 👇
+      cacheId: "gymtrack-v2",
+      additionalManifestEntries: [
+        { url: "/", revision: null }, // ← pastikan root di-cache
+      ],
       runtimeCaching: [
         {
           urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
