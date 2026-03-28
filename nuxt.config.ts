@@ -1,6 +1,5 @@
 // nuxt.config.ts
 export default defineNuxtConfig({
-  // 👇 1. MATIKAN SSR AGAR MENJADI APLIKASI OFFLINE (SPA) 👇
   ssr: false,
 
   devtools: { enabled: false },
@@ -25,9 +24,10 @@ export default defineNuxtConfig({
       short_name: "GymTrack",
       description: "Track workout, analisis hypertrophy, pantau progress",
       theme_color: "#0f1117",
-      background_color: "#0f1117",
+      background_color: "#0f1117", // <-- Penentu warna Splash Screen
       display: "standalone",
       orientation: "portrait",
+      start_url: "/", // <-- PENTING: Titik awal aplikasi agar PWA tidak tersesat
       icons: [
         {
           src: "/icon-192.png",
@@ -50,18 +50,16 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
-      navigateFallback: "/offline",
+      // BARIS 'navigateFallback' SUDAH DIHAPUS agar Nuxt mengaturnya otomatis
       globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
       cleanupOutdatedCaches: true,
-      // 👇 TAMBAHKAN OFFLINE FALLBACK UNTUK MENCEGAH BLOCKING SCREEN 👇
-      offlineGoogleAnalytics: false,
       runtimeCaching: [
         {
           urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
           handler: "CacheFirst",
           options: {
             cacheName: "google-fonts-cache",
-            expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 }, // Cache 1 tahun
+            expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
             cacheableResponse: { statuses: [0, 200] },
           },
         },
@@ -70,7 +68,7 @@ export default defineNuxtConfig({
           handler: "CacheFirst",
           options: {
             cacheName: "gstatic-fonts-cache",
-            expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 }, // Cache 1 tahun
+            expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
             cacheableResponse: { statuses: [0, 200] },
           },
         },
@@ -82,7 +80,6 @@ export default defineNuxtConfig({
     devOptions: {
       enabled: true,
       suppressWarnings: true,
-      navigateFallbackAllowlist: [/^\/$/],
       type: "module",
     },
   },
