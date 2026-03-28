@@ -24,8 +24,9 @@ const hasShownOfflineToast = ref(false)
 const { isOnline } = useNetwork()
 const { toast } = useToast()
 
+store.init()
+
 onMounted(() => {
-  store.init()
 
   // 1. Cek saat aplikasi pertama kali dibuka / di-refresh
   if (!isOnline.value && !hasShownOfflineToast.value) {
