@@ -23,6 +23,7 @@ import { useToast } from '~/composables/useToast'
 
 const store = useWorkoutStore()
 const showCamera = ref(false)
+const hasShownOfflineToast = ref(false)
 
 // Inisialisasi fitur deteksi Online/Offline & Toast
 const { isOnline } = useNetwork()
@@ -32,9 +33,9 @@ onMounted(() => {
   store.init()
 
   // 1. Cek saat aplikasi pertama kali dibuka / di-refresh
-  if (!isOnline.value) {
-    // Menggunakan tipe 'accent' sesuai di file useToast.ts Anda
+  if (!isOnline.value && !hasShownOfflineToast.value) {
     toast("Mode Offline Aktif. Pencatatan jalan terus, tapi AI Coach sedang tidur. 📡", "accent")
+    hasShownOfflineToast.value = true
   }
 })
 
@@ -42,10 +43,14 @@ onMounted(() => {
 watch(isOnline, (online) => {
   if (!online) {
     // Sinyal tiba-tiba hilang
-    toast("Koneksi terputus. Beralih ke mode Offline. 📡", "error")
+    if (hasShownOfflineToast.value === false) {
+      toast("Koneksi terputus. Beralih ke mode Offline. 📡", "error")
+      hasShownOfflineToast.value = true
+    }
   } else {
     // Sinyal kembali tersambung
     toast("Koneksi kembali! Fitur AI sudah bisa digunakan. 🌐", "success")
+    hasShownOfflineToast.value = false
   }
 })
 </script>
