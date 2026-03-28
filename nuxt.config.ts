@@ -50,7 +50,8 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
-      navigateFallback: "/",
+      navigateFallback: "/offline",
+      navigateFallbackDenylist: [/^\/_nuxt\//, /\/api\//],
       globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
       cleanupOutdatedCaches: true,
       // 👇 2. TAMBAHKAN INI UNTUK MENYIMPAN FONT GOOGLE SAAT OFFLINE 👇
@@ -122,7 +123,6 @@ export default defineNuxtConfig({
           rel: "stylesheet",
           href: "https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap",
         },
-        { rel: 'manifest', href: '/manifest.webmanifest' },
       ],
     },
   },
