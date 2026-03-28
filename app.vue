@@ -17,6 +17,8 @@ import { useWorkoutStore } from '~/stores/workout'
 import { useToast } from '~/composables/useToast'
 
 const store = useWorkoutStore()
+store.init()
+
 const showCamera = ref(false)
 const hasShownOfflineToast = ref(false)
 
@@ -24,7 +26,7 @@ const hasShownOfflineToast = ref(false)
 const { isOnline } = useNetwork()
 const { toast } = useToast()
 
-store.init()
+
 
 onMounted(() => {
 
