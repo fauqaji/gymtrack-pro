@@ -49,11 +49,11 @@ export default defineNuxtConfig({
       ],
     },
     workbox: {
-      navigateFallback: "/",
+      navigateFallback: "/index.html",
       navigateFallbackAllowlist: [/^\/(?!api\/).*/],
       globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
       cleanupOutdatedCaches: true,
-      cacheId: "gymtrack-v2",
+      cacheId: "gymtrack-v3",
       skipWaiting: true,
       clientsClaim: true,
       runtimeCaching: [
