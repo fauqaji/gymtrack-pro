@@ -54,9 +54,6 @@ export default defineNuxtConfig({
       globPatterns: ["**/*.{js,css,html,png,svg,ico}"],
       cleanupOutdatedCaches: true,
       cacheId: "gymtrack-v2",
-      additionalManifestEntries: [
-        { url: "/", revision: null }, // ← pastikan root di-cache
-      ],
       runtimeCaching: [
         {
           urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
